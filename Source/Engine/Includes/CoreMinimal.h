@@ -14,6 +14,7 @@
 #define FIND_ASSET(AssetPath)              STR(CONTENT_PATH) AssetPath
 #define CONTEXT_LOG                        "-> " STR(__FILE__) ":" STR(__LINE__)
 #define MAKE_LOG_FAST(LogLevel)            ((UInt16)1 << 8 | LogLevel)
+#define BUFFER_LOG_SIZE                    2048
 #define GT_LOG(ELogLevel, Format, ...)     EnginePrintLog(ELogLevel, "GAME:", CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define GT_LOGTEMP(ELogLevel, Format, ...) EnginePrintLog(MAKE_LOG_FAST(ELogLevel), "GAME:", CONTEXT_LOG, Format, ##__VA_ARGS__)
 

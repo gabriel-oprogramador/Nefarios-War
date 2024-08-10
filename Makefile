@@ -35,7 +35,7 @@ ifeq ($(OS), Windows_NT)
 	EXTENSION = .exe
 	LIBS =
 	LIBS_PATH =
-else ifeq (shell uname, Linux)
+else ifeq ($(shell uname), Linux)
 	DEFINES += -DPLATFORM_LINUX
 	FLAGS += -std=gnu99
 	PLATFORM = Linux
