@@ -30,7 +30,7 @@ Bool EngineShouldClose() {
 Void EngineShutdown() {
 }
 
-Void EnginePrintLog(ELogLevel Level, String Module, String Context, String Format, ...) {
+Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
   static Char logBuffer[BUFFER_LOG_SIZE] = {""};
   static String logTag = NULL;
   Bool bIsFast = (Level >> 8);
@@ -69,7 +69,7 @@ Void EnginePrintLog(ELogLevel Level, String Module, String Context, String Forma
   SetConsoleTextAttribute(SConsole.hConsole, color);
   va_list args;
   va_start(args, Format);
-  snprintf(logBuffer, sizeof(logBuffer), "%s %s %s %s\n", logTag, Module, Format, (Level == LOG_INFO) ? "" : Context);
+  snprintf(logBuffer, sizeof(logBuffer), "%s %s %s\n", logTag, Format, (Level == LOG_INFO) ? "" : Context);
   vprintf(logBuffer, args);
   va_end(args);
   SetConsoleTextAttribute(SConsole.hConsole, SConsole.defaultAttribute);

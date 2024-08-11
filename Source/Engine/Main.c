@@ -6,21 +6,26 @@ extern Void GameStart();
 extern Void GameUpdate(Float DeltaTime);
 extern Void GameStop();
 
+static Bool SbInitGamePlay = true;
+static Bool SbGameIsRunning = false;
+
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
   EngineInit(1280, 768, STR(GAME_NAME));
+  GameInit();
 
-  GT_LOGTEMP(LOG_WARNING, "My Temp Log:%d", 27);
-  GT_LOG(LOG_INFO, "Init Game %s", STR(GAME_NAME));
-  GT_LOG(LOG_INFO, "Config Path => %s", FIND_CONFIG("Engine/Settings.txt"));
-  GT_LOG(LOG_INFO, "Asset Path => %s", FIND_ASSET("Texture/PlayerShip.bmp"));
-
-  Int32 number = 27;
-  GT_LOG(LOG_INFO, "My Log System:%d", number);
-  GT_LOG(LOG_SUCCESS, "My Log System:%d", number);
-  GT_LOG(LOG_WARNING, "My Log System:%d", number);
-  GT_LOG(LOG_ERROR, "My Log System:%d", number);
-  GT_LOG(LOG_FATAL, "My Log System:%d", number);
+  while (!EngineShouldClose()) {
+    EngineBeginFrame();
+    if (SbInitGamePlay && !SbGameIsRunning) {
+      SbGameIsRunning = true;
+      GameStart();
+    }
+    if (SbInitGamePlay) {
+      GameUpdate(0.016f);
+    }
+    EngineEndFrame();
+  }
+  EngineShutdown();
 
   return 0;
 }

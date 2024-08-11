@@ -15,8 +15,8 @@
 #define CONTEXT_LOG                        "-> " STR(__FILE__) ":" STR(__LINE__)
 #define MAKE_LOG_FAST(LogLevel)            ((UInt16)1 << 8 | LogLevel)
 #define BUFFER_LOG_SIZE                    2048
-#define GT_LOG(ELogLevel, Format, ...)     EnginePrintLog(ELogLevel, "GAME:", CONTEXT_LOG, Format, ##__VA_ARGS__)
-#define GT_LOGTEMP(ELogLevel, Format, ...) EnginePrintLog(MAKE_LOG_FAST(ELogLevel), "GAME:", CONTEXT_LOG, Format, ##__VA_ARGS__)
+#define GT_LOG(ELogLevel, Format, ...)     EnginePrintLog(ELogLevel, CONTEXT_LOG, Format, ##__VA_ARGS__)
+#define GT_LOGTEMP(ELogLevel, Format, ...) EnginePrintLog(MAKE_LOG_FAST(ELogLevel), CONTEXT_LOG, Format, ##__VA_ARGS__)
 
 typedef void Void;
 typedef bool Bool;
@@ -40,4 +40,4 @@ typedef enum {
   LOG_FATAL = (1 << 4),   //
 } ELogLevel;
 
-extern Void EnginePrintLog(ELogLevel Level, String Module, String Context, String Format, ...);
+extern Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...);
