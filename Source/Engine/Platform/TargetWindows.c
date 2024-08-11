@@ -3,6 +3,8 @@
 
 #include <windows.h>
 
+FGT GEngine = {0};
+
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
 
@@ -24,13 +26,57 @@ Void EngineInit(Int32 Width, Int32 Height, String Title) {
 }
 
 Bool EngineShouldClose() {
-  return false;
+  return CALL_API(GEngine.windowApi.WindowShouldClose, true);
 }
 
 Void EngineShutdown() {
 }
 
+Void EngineBeginFrame() {
+  CALL_API(GEngine.windowApi.WindowUpdate, NULL);
+}
+
+Void EngineEndFrame() {
+}
+
+// Moudules
+Void* EngineLoadModule(String Name) {
+  return LoadLibraryA(Name);
+}
+
+Void EngineFreeModule(Void* Module) {
+  if (Module != NULL) {
+    FreeLibrary((HMODULE)Module);
+  }
+}
+
+Void* EngineGetFunc(Void* Module, String Name) {
+  return GetProcAddress((HMODULE)Module, Name);
+}
+
+Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
+  String* names = Names;
+  Void* function = NULL;
+  Int32 index = 0;
+
+  while (**names) {
+    function = EngineGetFunc(Module, *names);
+    if (function != NULL) {
+      Void* addr = (Char*)Api + index * sizeof(Void*);
+      memcpy(addr, function, sizeof(Void*));
+      if (bDebugMode) {
+        GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
+      }
+    } else if (bDebugMode) {
+      GT_LOG(LOG_INFO, "Function Not Loaded:%s", *names);
+    }
+    names++;
+    index++;
+  }
+}
+
 Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
+
   static Char logBuffer[BUFFER_LOG_SIZE] = {""};
   static String logTag = NULL;
   Bool bIsFast = (Level >> 8);

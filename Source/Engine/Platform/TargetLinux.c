@@ -58,10 +58,10 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode){
       Void* addr = (Char*)Api + index * sizeof(Void*);
       memcpy(addr, &function, sizeof(Void*));
       if(bDebugMode){
-        GT_LOGTEMP(LOG_INFO, "Function Loaded:%s", *names);
+        GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }
     }else if(bDebugMode){
-        GT_LOGTEMP(LOG_INFO, "Function Not Loaded:%s", *names);
+        GT_LOG(LOG_INFO, "Function Not Loaded:%s", *names);
     }
     names++;
     index++;
