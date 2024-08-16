@@ -63,7 +63,7 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
     function = EngineGetFunc(Module, *names);
     if (function != NULL) {
       Void* addr = (Char*)Api + index * sizeof(Void*);
-      memcpy(addr, function, sizeof(Void*));
+      memcpy(addr, &function, sizeof(Void*));
       if (bDebugMode) {
         GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }

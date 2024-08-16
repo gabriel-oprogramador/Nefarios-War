@@ -11,7 +11,7 @@ static Bool SbGameIsRunning = false;
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
-  EngineInit(1280, 768, STR(GAME_NAME));
+  EngineInit(800, 600, STR(GAME_NAME));
   GameInit();
 
   while (!EngineShouldClose()) {
@@ -25,6 +25,7 @@ int GTmain(int argc, const char** argv) {
     }
     EngineEndFrame();
   }
+  GameStop();
   EngineShutdown();
 
   return 0;

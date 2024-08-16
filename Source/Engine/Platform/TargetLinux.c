@@ -1,67 +1,68 @@
 #ifdef PLATFORM_LINUX
-#include <dlfcn.h>
 #include "Engine.h"
 
-extern Bool ApiX11Init(FGT* Engine);
+#include <dlfcn.h>
 
 FGT GEngine = {0};
+
+extern Bool ApiX11Init(FWindowApi* WindowApi);
 
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
 
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
   SLogFile = fopen(SLogFilePath, "w");
-  if(ApiX11Init(&GEngine)){
+  if (ApiX11Init(&GEngine.windowApi)) {
     GT_LOG(LOG_INFO, "PLATFORM: X11 API Initialized");
-    GEngine.WindowCreate(Width, Height, Title);
+    CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title);
   }
 }
 
 Bool EngineShouldClose() {
-  return GEngine.WindowShouldClose();
+  return GEngine.windowApi.bShouldClose;
 }
 
 Void EngineShutdown() {
-  GEngine.WindowDestroy();
+  CALL_API(GEngine.windowApi.OnWindowDestroy, NULL);
 }
 
 Void EngineBeginFrame() {
-  GEngine.WindowUpdate();
+  CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
 }
 
 Void EngineEndFrame() {
 }
 
 // Module
-Void* EngineLoadModule(String Name){
+Void* EngineLoadModule(String Name) {
   return dlopen(Name, RTLD_LAZY | RTLD_GLOBAL);
 }
 
-Void EngineFreeModule(Void* Module){
-  if(Module != NULL){
+Void EngineFreeModule(Void* Module) {
+  if (Module != NULL) {
     dlclose(Module);
   }
 }
 
-Void* EngineGetFunc(Void* Module, String Name){
+Void* EngineGetFunc(Void* Module, String Name) {
   return dlsym(Module, Name);
 }
 
-Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode){
+Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
   String* names = Names;
   Void* function = NULL;
   Int32 index = 0;
 
-  while(**names){
+  while (**names) {
     function = EngineGetFunc(Module, *names);
-    if(function != NULL){
+    if (function != NULL) {
       Void* addr = (Char*)Api + index * sizeof(Void*);
       memcpy(addr, &function, sizeof(Void*));
-      if(bDebugMode){
+      if (bDebugMode) {
         GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }
-    }else if(bDebugMode){
-        GT_LOG(LOG_INFO, "Function Not Loaded:%s", *names);
+    } else if (bDebugMode) {
+      GT_LOG(LOG_INFO, "Function Not Loaded:%s", *names);
     }
     names++;
     index++;
@@ -77,23 +78,23 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
 
   switch (logLevel) {
     case LOG_INFO: {
-      logColor = (String)"\033[0;97m";
+      logColor = (String) "\033[0;97m";
       logTag = (String) "[LOG INFO] =>";
     } break;
     case LOG_SUCCESS: {
-      logColor = (String)"\033[0;92m";
+      logColor = (String) "\033[0;92m";
       logTag = (String) "[LOG SUCCESS] =>";
     } break;
     case LOG_WARNING: {
-      logColor = (String)"\033[0;93m";
+      logColor = (String) "\033[0;93m";
       logTag = (String) "[LOG WARNING] =>";
     } break;
     case LOG_ERROR: {
-      logColor = (String)"\033[0;91m";
+      logColor = (String) "\033[0;91m";
       logTag = (String) "[LOG ERROR] =>";
     } break;
     case LOG_FATAL: {
-      logColor = (String)"\033[0;31m";
+      logColor = (String) "\033[0;31m";
       logTag = (String) "[LOG FATAL] =>";
     } break;
   }
