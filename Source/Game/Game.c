@@ -1,4 +1,5 @@
 #include "Game.h"
+
 #include "GameFramework.h"
 
 // Called when starting the engine.
@@ -12,10 +13,13 @@ Void GameStart() {
 // Called every frame.
 Void GameUpdate(Float DeltaTime) {
   if (FInputIsPressed(KEY_W)) {
-    GT_LOGTEMP(LOG_WARNING, "Key Pressed: W");
+    GT_LOGTEMP(LOG_WARNING, "Key Pressed:W");
   }
   if (FInputIsRelease(KEY_W)) {
-    GT_LOGTEMP(LOG_WARNING, "Key Release: W");
+    GT_LOGTEMP(LOG_WARNING, "Key Release:W");
+  }
+  if (FInputIsRepeat(KEY_W)) {
+    /*GT_LOGTEMP(LOG_WARNING, "Key Reeat:W");*/
   }
 }
 

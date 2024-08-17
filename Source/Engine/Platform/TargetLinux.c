@@ -13,7 +13,7 @@ static String SLogFilePath = "LogFile.txt";
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
   SLogFile = fopen(SLogFilePath, "w");
   if (ApiX11Init(&GEngine.windowApi)) {
-    GT_LOG(LOG_INFO, "PLATFORM: X11 API Initialized");
+    GT_LOG(LOG_INFO, "PLATFORM:X11 API Initialized");
     CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title);
   }
 }

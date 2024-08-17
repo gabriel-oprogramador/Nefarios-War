@@ -5,6 +5,8 @@
 
 FGT GEngine = {0};
 
+extern Bool ApiWin32Init(FWindowApi* WindowApi);
+
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
 
@@ -14,6 +16,7 @@ static struct {
 } SConsole;
 
 static Void InitWin32Console() {
+  GEngine.windowApi.bShouldClose = true;
   SConsole.hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO consoleScreenInfo;
   GetConsoleScreenBufferInfo(SConsole.hConsole, &consoleScreenInfo);
@@ -23,17 +26,22 @@ static Void InitWin32Console() {
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
   InitWin32Console();
   SLogFile = fopen(SLogFilePath, "w");
+  if (ApiWin32Init(&GEngine.windowApi)) {
+    GT_LOG(LOG_INFO, "PLATFORM:Win32 API Initialized");
+    CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title)
+  }
 }
 
 Bool EngineShouldClose() {
-  return CALL_API(GEngine.windowApi.WindowShouldClose, true);
+  return GEngine.windowApi.bShouldClose;
 }
 
 Void EngineShutdown() {
+  CALL_API(GEngine.windowApi.OnWindowDestroy, NULL);
 }
 
 Void EngineBeginFrame() {
-  CALL_API(GEngine.windowApi.WindowUpdate, NULL);
+  CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
 }
 
 Void EngineEndFrame() {
@@ -76,7 +84,6 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
 }
 
 Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
-
   static Char logBuffer[BUFFER_LOG_SIZE] = {""};
   static String logTag = NULL;
   Bool bIsFast = (Level >> 8);
