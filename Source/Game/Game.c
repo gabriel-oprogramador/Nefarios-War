@@ -12,6 +12,10 @@ Void GameStart() {
 
 // Called every frame.
 Void GameUpdate(Float DeltaTime) {
+  // TODO:To Test OpenGL
+  GL.glClearColor(1.f, 1.f, 0.f, 1.f);
+  GL.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   if (FInputIsPressed(KEY_W)) {
     GT_LOGTEMP(LOG_WARNING, "Key Pressed:W");
   }

@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "GL/ApiGL.h"
+
 
 #define NO_EXPAND(a)                       #a
 #define STR(a)                             NO_EXPAND(a)
@@ -31,6 +33,8 @@ typedef unsigned long long UInt64;
 typedef float Float;
 typedef double Double;
 typedef const char* String;
+
+extern FGL GL;
 
 typedef enum {
   LOG_INFO = (1 << 0),    //

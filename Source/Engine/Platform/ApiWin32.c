@@ -6,6 +6,9 @@
 
 #define CODE_WINDOW_CLOSE WM_USER + 1
 
+extern HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits);
+extern Void ApiGdiSwapBuffer(HDC Device);
+
 static Void* SLibUser32 = NULL;
 
 static const char* SLibUser32Names[] = {
@@ -33,45 +36,26 @@ static const char* SLibUser32Names[] = {
 };
 
 static struct {
-  BOOL(*SetWindowTextA)
-  (HWND hWnd, LPCSTR lpString);
+  BOOL(*SetWindowTextA) (HWND hWnd, LPCSTR lpString);
   int (*ShowCursor)(BOOL bShow);
-  ATOM(*RegisterClassExA)
-  (const WNDCLASSEXA* unnamedParam1);
-  LRESULT(*DefWindowProcA)
-  (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-  HICON(*LoadIconA)
-  (HINSTANCE hInstance, LPCSTR lpIconName);
-  HCURSOR(*LoadCursorA)
-  (HINSTANCE hInstance, LPCSTR lpCursorName);
-  BOOL(*PeekMessageA)
-  (LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
-  BOOL(*TranslateMessage)
-  (const MSG* lpMsg);
-  LRESULT(*DispatchMessageA)
-  (const MSG* lpMsg);
-  BOOL(*PostMessageA)
-  (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+  ATOM(*RegisterClassExA) (const WNDCLASSEXA* unnamedParam1);
+  LRESULT(*DefWindowProcA) (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+  HICON(*LoadIconA) (HINSTANCE hInstance, LPCSTR lpIconName);
+  HCURSOR(*LoadCursorA) (HINSTANCE hInstance, LPCSTR lpCursorName);
+  BOOL(*PeekMessageA) (LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
+  BOOL(*TranslateMessage) (const MSG* lpMsg);
+  LRESULT(*DispatchMessageA) (const MSG* lpMsg);
+  BOOL(*PostMessageA) (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
   int (*GetSystemMetrics)(int nIndex);
-  LONG_PTR(*SetWindowLongPtrA)
-  (HWND hWnd, int nIndex, LONG_PTR dwNewLong);
-  BOOL(*SetWindowPos)
-  (HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
-  BOOL(*GetWindowRect)
-  (HWND hWnd, LPRECT lpRect);
-  BOOL(*GetClientRect)
-  (HWND hWnd, LPRECT lpRect);
-  BOOL(*AdjustWindowRect)
-  (LPRECT lpRect, DWORD dwStyle, BOOL bMenu);
-  BOOL(*DestroyWindow)
-  (HWND hWnd);
-  BOOL(*GetClassInfoExA)
-  (HINSTANCE hInstance, LPCSTR lpszClass, LPWNDCLASSEXA lpwcx);
-  HDC(*GetDC)
-  (HWND hWnd);
-  HWND(*CreateWindowExA)
-  (DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight,
-   HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
+  LONG_PTR(*SetWindowLongPtrA) (HWND hWnd, int nIndex, LONG_PTR dwNewLong);
+  BOOL(*SetWindowPos) (HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
+  BOOL(*GetWindowRect) (HWND hWnd, LPRECT lpRect);
+  BOOL(*GetClientRect) (HWND hWnd, LPRECT lpRect);
+  BOOL(*AdjustWindowRect) (LPRECT lpRect, DWORD dwStyle, BOOL bMenu);
+  BOOL(*DestroyWindow) (HWND hWnd);
+  BOOL(*GetClassInfoExA) (HINSTANCE hInstance, LPCSTR lpszClass, LPWNDCLASSEXA lpwcx);
+  HDC(*GetDC) (HWND hWnd);
+  HWND(*CreateWindowExA) (DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
 } SApiUser32;
 
 static struct {
@@ -80,57 +64,34 @@ static struct {
   Int32 lastPosX;
   Int32 lastPosY;
   HWND window;
+  HGLRC context;
   HDC device;
 } SWindow;
 
 static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed);
 
+// Functions to assist in creating the dummy window for WGL Api.
+HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title);
+Void ApiWin32DestroyWindow(HWND Window);
+HDC ApiWin32GetDC(HWND Window);
+
 Void ApiWin32WindowCreate(Int32 Width, Int32 Height, String Title) {
-  String windowClassName = "GameWindow";
-  HINSTANCE hInstance = GetModuleHandleA(NULL);
-  WNDCLASSEXA wc = {0};
-
-  if (!SApiUser32.GetClassInfoExA(hInstance, windowClassName, &wc)) {
-    wc.cbSize = sizeof(WNDCLASSEXA);
-    wc.style = CS_OWNDC;
-    wc.lpfnWndProc = &InternalWinProc;
-    wc.hInstance = hInstance;
-    wc.hIcon = SApiUser32.LoadIconA(NULL, IDI_APPLICATION);
-    wc.hCursor = SApiUser32.LoadCursorA(NULL, IDC_ARROW);
-    wc.lpszClassName = windowClassName;
-
-    if (!SApiUser32.RegisterClassExA(&wc)) {
-      GT_LOG(LOG_FATAL, "API:Win32 Not Register Class Window");
-      exit(1); // Exit Program
-    }
-  }
-
-  RECT winRect = {(LONG)0, (LONG)0, (LONG)Width, (LONG)Height};
-  if (!SApiUser32.AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE)) {
-    GT_LOG(LOG_ERROR, "API:Win32 No Adjust Window Rect");
-  }
-
-  Int32 winWidth = winRect.right - winRect.left;
-  Int32 winHeight = winRect.bottom - winRect.top;
-  UInt32 winStyle = WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE;
-  HWND hWin = SApiUser32.CreateWindowExA(0, windowClassName, Title, winStyle, CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
-  if (hWin == NULL) {
-    GT_LOG(LOG_FATAL, "API:Win32 Not Create Game Window");
-    exit(1); // Exit Program
-  }
-
+  SWindow.window = ApiWin32CreateWindow(Width, Height, Title);
+  SWindow.device = ApiWin32GetDC(SWindow.window);
+  // TODO: Never use magic numbers!
+  SWindow.context = ApiWglInit(SWindow.window, SWindow.device, 3, 3, 32, 24);
   GEngine.windowApi.width = Width;
   GEngine.windowApi.height = Height;
   GEngine.windowApi.title = Title;
   GEngine.windowApi.bFullsreen = false;
   GEngine.windowApi.bShouldClose = false;
-  SWindow.window = hWin;
-  SWindow.device = SApiUser32.GetDC(hWin);
-  GT_LOG(LOG_INFO, "API:Win32 Create Window => Width:%d Height:%d Title:%s", Width, Height, Title);
+  GT_LOG(LOG_INFO, "API:WIN32 Created Window => Width:%d Height:%d Title:%s", Width, Height, Title);
 }
 
 Void ApiWin32WindowUpdate() {
+  ApiGdiSwapBuffer(SWindow.device);
+
   MSG msg;
   memcpy(GEngine.inputApi.previousKeys, GEngine.inputApi.currentKeys, sizeof(GEngine.inputApi.previousKeys));
   InternalUpdateKey(MOUSE_FORWARD_CODE, false);
@@ -147,8 +108,8 @@ Void ApiWin32WindowUpdate() {
 }
 
 Void ApiWin32WindowDestroy() {
-  GT_LOG(LOG_INFO, "API:Win32 Close Window");
-  SApiUser32.DestroyWindow(SWindow.window);
+  GT_LOG(LOG_INFO, "API:WIN32 Closed Window");
+  ApiWin32DestroyWindow(SWindow.window);
 }
 
 static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
@@ -318,6 +279,53 @@ static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed) {
   }
 }
 
+// Function to assist in creating the dummy window for WGL Api.
+HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title){
+  String windowClassName = "DummyWindow";
+  HINSTANCE hInstance = GetModuleHandleA(NULL);
+  WNDCLASSEXA wc = {0};
+
+  if (!SApiUser32.GetClassInfoExA(hInstance, windowClassName, &wc)) {
+    wc.cbSize = sizeof(WNDCLASSEXA);
+    wc.style = CS_OWNDC;
+    wc.lpfnWndProc = &InternalWinProc;
+    wc.hInstance = hInstance;
+    wc.hIcon = SApiUser32.LoadIconA(NULL, IDI_APPLICATION);
+    wc.hCursor = SApiUser32.LoadCursorA(NULL, IDC_ARROW);
+    wc.lpszClassName = windowClassName;
+
+    if (!SApiUser32.RegisterClassExA(&wc)) {
+      GT_LOG(LOG_FATAL, "API:WIN32 Not Register Class Window");
+      exit(1); // Exit Program
+    }
+  }
+
+  RECT winRect = {(LONG)0, (LONG)0, (LONG)Width, (LONG)Height};
+  if (!SApiUser32.AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE)) {
+    GT_LOG(LOG_ERROR, "API:WIN32 No Adjust Window Rect");
+  }
+
+  Int32 winWidth = winRect.right - winRect.left;
+  Int32 winHeight = winRect.bottom - winRect.top;
+  UInt32 winStyle = WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE;
+  HWND hWin = SApiUser32.CreateWindowExA(0, windowClassName, Title, winStyle, CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
+  if (hWin == NULL) {
+    GT_LOG(LOG_FATAL, "API:WIN32 Not Create Game Window");
+    exit(1); // Exit Program
+  }
+
+  return hWin;
+}
+
+Void ApiWin32DestroyWindow(HWND Window){
+  SApiUser32.DestroyWindow(Window);
+}
+
+HDC ApiWin32GetDC(HWND Window){
+  return SApiUser32.GetDC(Window);
+}
+
+// Setting the Win32 API interface.
 Bool ApiWin32Init(FWindowApi* WindowApi) {
   SLibUser32 = EngineLoadModule("user32.dll");
   if (SLibUser32 == NULL) {
@@ -327,6 +335,7 @@ Bool ApiWin32Init(FWindowApi* WindowApi) {
   WindowApi->OnWindowCreate = &ApiWin32WindowCreate;
   WindowApi->OnWindowUpdate = &ApiWin32WindowUpdate;
   WindowApi->OnWindowDestroy = &ApiWin32WindowDestroy;
+  GT_LOG(LOG_INFO, "API:WIN32 Initialized");
   return true;
 }
 

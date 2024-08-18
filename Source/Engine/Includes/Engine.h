@@ -23,6 +23,11 @@ typedef struct {
   UChar currentKeys[KEY_MAX];
 } FInputApi;
 
+typedef struct{
+  Int32 major;
+  Int32 minor;
+} FGraphicInfo;
+
 typedef struct {
   FWindowApi windowApi;
   FAudioApi audioApi;
@@ -37,7 +42,11 @@ Void EngineShutdown();
 Void EngineBeginFrame();
 Void EngineEndFrame();
 
-// Modules
+// Graphic
+Bool EngineInitGraphic();
+
+
+// Module
 Void* EngineLoadModule(String Name);
 Void EngineFreeModule(Void* Module);
 Void* EngineGetFunc(Void* Module, String Name);

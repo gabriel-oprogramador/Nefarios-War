@@ -27,7 +27,6 @@ Void EngineInit(Int32 Width, Int32 Height, String Title) {
   InitWin32Console();
   SLogFile = fopen(SLogFilePath, "w");
   if (ApiWin32Init(&GEngine.windowApi)) {
-    GT_LOG(LOG_INFO, "PLATFORM:Win32 API Initialized");
     CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title)
   }
 }
