@@ -1,6 +1,8 @@
+#include "GL/ApiGL.h"
 #include "Engine.h"
 
-static String SApiGLNames[] = {
+
+static String SLibGLNames[] = {
     "glCullFace",
     "glFrontFace",
     "glHint",
@@ -1278,8 +1280,9 @@ FGL GL;
 
 #ifdef PLATFORM_WINDOWS
 void ApiGLLoadFuntions(void* LibOpenGL, Bool bDebugMode) {
-  PROC(*OnWglGetProcAddress) (LPCSTR unnamedParam1) = EngineGetFunc(LibOpenGL, "wglGetProcAddress");
-  String* names = SApiGLNames;
+  PROC(*OnWglGetProcAddress)
+  (LPCSTR unnamedParam1) = EngineGetFunc(LibOpenGL, "wglGetProcAddress");
+  String* names = SLibGLNames;
   void* api = &GL;
   void* func = NULL;
   int index = 0;
@@ -1303,24 +1306,46 @@ void ApiGLLoadFuntions(void* LibOpenGL, Bool bDebugMode) {
     names++;
     index++;
   }
+
+  GT_LOG(LOG_INFO, "API:GL Initialized");
+  GT_LOG(LOG_INFO, "API:GL Loaded Functions");
 }
 
 #endif // PLATFORM_WINDOWS
 
 #ifdef PLATFORM_LINUX
-// TODO: Refactor everything for Linux
-static void* lib_gl = NULL;
-// Used in Linux
-bool api_gl_init(const char* lib_name) {
-  lib_gl = load_library_p(lib_name);
-  if (lib_gl == NULL) {
-    G_LOG(LOG_FATAL, "OpenGL Not Loaded Lib Name:%s", lib_name);
-    return NULL;
+static Void* SLibGL = NULL;
+
+Void ApiGLLoadFuntions(Bool bDebugMode) {
+  String* names = SLibGLNames;
+  Void* api = &GL;
+  Void* func = NULL;
+  Int32 index = 0;
+
+  SLibGL = EngineLoadModule("libGL.so");
+  if (SLibGL == NULL) {
+    GT_LOG(LOG_FATAL, "API:GL Not Loaded");
+    return;
   }
 
-  get_functions_p(lib_gl, &GL, gl_names);
-  G_LOG(LOG_INFO, "OpenGL Functions Loaded.");
-  return true;
+  while (**names) {
+    func = EngineGetFunc(SLibGL, *names);
+    if (func != NULL) {
+      Void* addr = (Char*)api + (index * sizeof(Void*));
+      // TODO: Use Engine's EngineMemCopy.
+      memcpy(addr, &func, sizeof(Void*));
+      if (bDebugMode) {
+        GT_LOG(LOG_INFO, "API:GL Function Loaded:%s", *names);
+      }
+    } else if (bDebugMode) {
+      GT_LOG(LOG_FATAL, "API:GL Function Not Loaded:%s", *names);
+    }
+    index++;
+    names++;
+  }
+
+  GT_LOG(LOG_INFO, "API:GL Initialized");
+  GT_LOG(LOG_INFO, "API:GL Loaded Functions");
 }
 
 #endif // PLATFORM_LINUX

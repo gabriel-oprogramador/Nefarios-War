@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "GL/ApiGL.h"
-
 
 #define NO_EXPAND(a)                       #a
 #define STR(a)                             NO_EXPAND(a)
@@ -16,6 +14,7 @@
 #define FIND_ASSET(AssetPath)              STR(CONTENT_PATH) AssetPath
 #define CONTEXT_LOG                        "-> " STR(__FILE__) ":" STR(__LINE__)
 #define MAKE_LOG_FAST(LogLevel)            ((UInt16)1 << 8 | LogLevel)
+#define BUFFER_SMALL                        256
 #define BUFFER_LOG_SIZE                    2048
 #define GT_LOG(ELogLevel, Format, ...)     EnginePrintLog(ELogLevel, CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define GT_LOGTEMP(ELogLevel, Format, ...) EnginePrintLog(MAKE_LOG_FAST(ELogLevel), CONTEXT_LOG, Format, ##__VA_ARGS__)
@@ -33,8 +32,6 @@ typedef unsigned long long UInt64;
 typedef float Float;
 typedef double Double;
 typedef const char* String;
-
-extern FGL GL;
 
 typedef enum {
   LOG_INFO = (1 << 0),    //

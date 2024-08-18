@@ -1275,4 +1275,4 @@ typedef struct{
   PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR;
 } FGL;
 
-
+extern FGL GL;

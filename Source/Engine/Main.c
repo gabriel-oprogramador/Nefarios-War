@@ -13,6 +13,7 @@ static Bool SbGameIsRunning = false;
 int GTmain(int argc, const char** argv) {
   EngineInit(800, 600, STR(GAME_NAME));
   GameInit();
+  GEngine.frameTime = 1.f / 60;
 
   while (!EngineShouldClose()) {
     EngineBeginFrame();
@@ -21,7 +22,7 @@ int GTmain(int argc, const char** argv) {
       GameStart();
     }
     if (SbInitGamePlay) {
-      GameUpdate(0.016f);
+      GameUpdate(GEngine.deltaTime);
     }
     EngineEndFrame();
   }

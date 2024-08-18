@@ -5,3 +5,5 @@
 Bool FInputIsPressed(UChar KeyCode);
 Bool FInputIsRelease(UChar KeyCode);
 Bool FInputIsRepeat(UChar KeyCode);
+Float FInputGetMouseX();
+Float FInputGetMouseY();

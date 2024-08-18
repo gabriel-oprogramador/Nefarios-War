@@ -160,8 +160,8 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
     return NULL;
   }
 
+  GT_LOG(LOG_INFO, "API:WGL Created OpenGL Context => Core Profile:%d.%d", Major, Minor);
   ApiGLLoadFuntions(SLibGL32, false);
-  GT_LOG(LOG_INFO, "API:WGL Created OpenGL Context:%d.%d", Major, Minor);
 
   return renderContext;
 }

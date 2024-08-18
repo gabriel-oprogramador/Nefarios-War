@@ -12,6 +12,7 @@ typedef struct {
   Void (*OnWindowCreate)(Int32, Int32, String);
   Void (*OnWindowUpdate)();
   Void (*OnWindowDestroy)();
+  Void (*OnWindowFullscreen)(Bool);
 } FWindowApi;
 
 typedef struct {
@@ -21,17 +22,15 @@ typedef struct {
 typedef struct {
   UChar previousKeys[KEY_MAX];
   UChar currentKeys[KEY_MAX];
+  Float mousePosition[2];
 } FInputApi;
-
-typedef struct{
-  Int32 major;
-  Int32 minor;
-} FGraphicInfo;
 
 typedef struct {
   FWindowApi windowApi;
   FAudioApi audioApi;
   FInputApi inputApi;
+  Float deltaTime;
+  Float frameTime;
 } FGT;
 
 extern FGT GEngine;
@@ -41,6 +40,11 @@ Bool EngineShouldClose();
 Void EngineShutdown();
 Void EngineBeginFrame();
 Void EngineEndFrame();
+Void EngineFullscreen(Bool bIsFullscreen);
+
+Void EngineSetTargetFPS(UInt32 Target);
+Float EngineGetTime();
+Void EngineWait(Float Time);
 
 // Graphic
 Bool EngineInitGraphic();

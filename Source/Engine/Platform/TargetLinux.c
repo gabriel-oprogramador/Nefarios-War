@@ -2,18 +2,23 @@
 #include "Engine.h"
 
 #include <dlfcn.h>
+#include <sys/time.h>
+#include <time.h>
+
+#define TO_SECONDS 1000000.0
 
 FGT GEngine = {0};
 
 extern Bool ApiX11Init(FWindowApi* WindowApi);
+extern Void ApiEGLSwapBuffer();
 
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
+static Float SFrameBegin = 0;
 
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
   SLogFile = fopen(SLogFilePath, "w");
   if (ApiX11Init(&GEngine.windowApi)) {
-    GT_LOG(LOG_INFO, "PLATFORM:X11 API Initialized");
     CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title);
   }
 }
@@ -27,10 +32,47 @@ Void EngineShutdown() {
 }
 
 Void EngineBeginFrame() {
+  SFrameBegin = EngineGetTime();
   CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
 }
 
 Void EngineEndFrame() {
+  ApiEGLSwapBuffer();
+
+  Float delta = EngineGetTime() - SFrameBegin;
+  Float remainingTime = GEngine.frameTime - delta;
+  Float threshold = 1.f;
+
+  if (GEngine.frameTime > 0) {
+    if (remainingTime > threshold) {
+      EngineWait(remainingTime * 0.9f);
+      remainingTime = GEngine.frameTime - (EngineGetTime() - SFrameBegin);
+    }
+    while ((delta = EngineGetTime() - SFrameBegin) < GEngine.frameTime) {
+    }
+  }
+
+  GEngine.deltaTime = delta;
+}
+
+Void EngineFullscreen(Bool bIsFullscreen) {
+  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bIsFullscreen);
+}
+
+Float EngineGetTime() {
+  struct timespec timeSpec;
+  clock_gettime(CLOCK_MONOTONIC, &timeSpec);
+  return (Float)(timeSpec.tv_sec + timeSpec.tv_nsec / 1000000000.0f);
+}
+
+Void EngineWait(Float Milliseconds) {
+  struct timespec time;
+  Int32 sec = (Int32)(Milliseconds / 1000);
+  Int32 nSeg = (Int32)(Milliseconds - sec * 1000) * 1000000.0f;
+
+  time.tv_sec = sec;
+  time.tv_nsec = nSeg;
+  nanosleep(&time, NULL);
 }
 
 // Module

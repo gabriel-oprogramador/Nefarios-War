@@ -1,4 +1,5 @@
 #ifdef PLATFORM_LINUX
+#include "EGL/eglplatform.h"
 #include "Engine.h"
 
 #include <X11/X.h>
@@ -10,6 +11,11 @@
 #ifdef Bool
 #undef Bool
 #endif // Bool
+
+typedef EGLNativeWindowType PWindow;
+typedef EGLNativeDisplayType PDisplay;
+
+extern Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits);
 
 static Void* SLibX11 = NULL;
 static String SApiX11Name[] = {
@@ -87,6 +93,7 @@ static struct {
   Int32 keySymPerkeyCode;
 } SKeysMapping;
 
+static Void InternalUpdateWindowTitle();
 static Void InternalGetKeybordMapping();
 static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed);
 
@@ -125,12 +132,16 @@ Void ApiX11WindowCreate(Int32 Width, Int32 Height, String Title) {
   SWindow.display = dpy;
   SWindow.window = win;
   InternalGetKeybordMapping();
-  GT_LOG(LOG_INFO, "API:X11 Create Window => Width:%d Height:%d Title:%s", Width, Height, Title);
+  GT_LOG(LOG_INFO, "API:X11 Created Window => Width:%d Height:%d Title:%s", Width, Height, Title);
+  ApiEGLInit(SWindow.window, SWindow.display, 3, 3, 8, 24); // ColorBits R:8 G:8 B:8 A:8
 }
 
 Void ApiX11WindowUpdate() {
-  XEvent event;
+  #ifdef DEBUG_MODE
+  InternalUpdateWindowTitle();
+  #endif// DEBUG_MODE
 
+  XEvent event;
   memcpy(GEngine.inputApi.previousKeys, GEngine.inputApi.currentKeys, sizeof(GEngine.inputApi.previousKeys));
 
   while (SApiX11.XPending(SWindow.display)) {
@@ -148,6 +159,21 @@ Void ApiX11WindowUpdate() {
       case ButtonRelease: {
         InternalUpdateKey(event.xbutton.button, true, false);
       } break;
+      case ConfigureNotify: {
+        GEngine.windowApi.width = event.xconfigurerequest.width;
+        GEngine.windowApi.height = event.xconfigurerequest.height;
+        // TODO:Update The Renderer Viewport.
+      } break;
+      case MotionNotify: {
+        if (event.xmotion.window == SWindow.window) {
+          Float posX = event.xmotion.x;
+          Float posY = event.xmotion.y;
+          posX = (posX > GEngine.windowApi.width) ? GEngine.windowApi.width : posX;
+          posY = (posY > GEngine.windowApi.width) ? GEngine.windowApi.height : posY;
+          GEngine.inputApi.mousePosition[0] = posX;
+          GEngine.inputApi.mousePosition[1] = posY;
+        }
+      } break;
       case ClientMessage: {
         if (event.xclient.message_type == SWindow.wmProtocols) {
           if (event.xclient.data.l[0] == (Int32)SWindow.wmDeleteWindow) {
@@ -164,7 +190,36 @@ Void ApiX11WindowDestroy() {
   SApiX11.XUnmapWindow(SWindow.display, SWindow.window);
   SApiX11.XDestroyWindow(SWindow.display, SWindow.window);
   SApiX11.XCloseDisplay(SWindow.display);
-  GT_LOG(LOG_INFO, "API:X11 Close Window");
+  GT_LOG(LOG_INFO, "API:X11 Closed Window");
+}
+
+Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
+  if (GEngine.windowApi.bFullsreen == bIsFullscreen) {
+    return;
+  }
+
+  XEvent event;
+  GEngine.windowApi.bFullsreen = !GEngine.windowApi.bFullsreen;
+  SWindow.sizeHint->flags = (bIsFullscreen) ? 0 : PMinSize | PMaxSize;
+  SApiX11.XSetWMNormalHints(SWindow.display, SWindow.window, SWindow.sizeHint);
+  Atom wmState = SApiX11.XInternAtom(SWindow.display, "_NET_WM_STATE", false);
+  Atom wmFullscreen = SApiX11.XInternAtom(SWindow.display, "_NET_WM_STATE_FULLSCREEN", false);
+  memset(&event, 0, 1);
+  event.type = ClientMessage;
+  event.xclient.window = SWindow.window;
+  event.xclient.message_type = wmState;
+  event.xclient.format = 32;
+  event.xclient.data.l[0] = bIsFullscreen;
+  event.xclient.data.l[1] = wmFullscreen;
+  event.xclient.data.l[2] = 0;
+  SApiX11.XSendEvent(SWindow.display, DefaultRootWindow(SWindow.display), false, StructureNotifyMask, &event);
+}
+
+static Void InternalUpdateWindowTitle() {
+  Char buffer[BUFFER_SMALL] = "";
+  Int32 fps = 1 / GEngine.deltaTime;
+  snprintf(buffer, BUFFER_SMALL, "%s (Debug Mode) => FPS:%d | MS:%.3f", GEngine.windowApi.title, fps, GEngine.deltaTime);
+  SApiX11.XStoreName(SWindow.display, SWindow.window, buffer);
 }
 
 static Void InternalGetKeybordMapping() {
@@ -313,6 +368,8 @@ Bool ApiX11Init(FWindowApi* WindowApi) {
   WindowApi->OnWindowCreate = &ApiX11WindowCreate;
   WindowApi->OnWindowUpdate = &ApiX11WindowUpdate;
   WindowApi->OnWindowDestroy = &ApiX11WindowDestroy;
+  WindowApi->OnWindowFullscreen = &ApiX11WindowFullscreen;
+  GT_LOG(LOG_INFO, "API:X11 Initialized");
   return true;
 }
 #endif // PLATFORM_LINUX
