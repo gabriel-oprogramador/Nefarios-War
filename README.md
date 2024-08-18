@@ -32,5 +32,8 @@ To use Clang on Windows Add the below to the Vs Code settings file.
 * Linux
     + Gnu-Make
     + Clang/GCC
+    + libgl-dev
+    + libegl-dev
+    + libx11-dev
 
 
