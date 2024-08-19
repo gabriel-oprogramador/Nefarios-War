@@ -28,7 +28,8 @@ To use Clang on Windows Add the below to the Vs Code settings file.
     }  
 * Windows
     + Port of Linux Tools 'make, gcc, mkdir, rm, ...'. Used v1.22.0 -> [W64devkit](https://github.com/skeeto/w64devkit/releases)
-    + Clang with format for GDB. Used v18.1.8 -> [llvm-mingw](https://github.com/mstorsjo/llvm-mingw/releases)
+    + Clang with format for GDB. Used v14.0.0 -> [llvm-mingw](https://github.com/mstorsjo/llvm-mingw/releases)  
+    I switched to clang 14 because it is the version used on Linux and the versions above for Windows are executable and are accused of viruses.
 * Linux
     + Gnu-Make
     + Clang/GCC

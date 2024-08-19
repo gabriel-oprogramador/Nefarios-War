@@ -46,6 +46,22 @@ Void EngineBeginFrame() {
 Void EngineEndFrame() {
 }
 
+Void EngineFullscreen(Bool bIsFullscreen){
+
+}
+
+Void EngineSetTargetFPS(UInt32 Target){
+
+}
+
+Float EngineGetTime(){
+  return 0.016f;
+}
+
+Void EngineWait(Float Time){
+
+}
+
 // Moudules
 Void* EngineLoadModule(String Name) {
   return LoadLibraryA(Name);
