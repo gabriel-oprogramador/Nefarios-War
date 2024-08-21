@@ -25,7 +25,7 @@ typedef struct {
   Float mousePosition[2];
 } IInputApi;
 
-typedef struct{
+typedef struct {
   Float frameTime;
   UInt32 frameRate;
   Double deltaTime;

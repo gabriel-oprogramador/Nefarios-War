@@ -127,7 +127,7 @@ Void ApiX11WindowCreate(Int32 Width, Int32 Height, String Title) {
   GEngine.windowApi.width = Width;
   GEngine.windowApi.height = Height;
   GEngine.windowApi.title = Title;
-  GEngine.windowApi.bFullsreen = false;
+  GEngine.windowApi.bFullscreen = false;
   GEngine.windowApi.bShouldClose = false;
   SWindow.display = dpy;
   SWindow.window = win;
@@ -194,12 +194,12 @@ Void ApiX11WindowDestroy() {
 }
 
 Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
-  if (GEngine.windowApi.bFullsreen == bIsFullscreen) {
+  if (GEngine.windowApi.bFullscreen == bIsFullscreen) {
     return;
   }
 
   XEvent event;
-  GEngine.windowApi.bFullsreen = !GEngine.windowApi.bFullsreen;
+  GEngine.windowApi.bFullscreen = !GEngine.windowApi.bFullscreen;
   SWindow.sizeHint->flags = (bIsFullscreen) ? 0 : PMinSize | PMaxSize;
   SApiX11.XSetWMNormalHints(SWindow.display, SWindow.window, SWindow.sizeHint);
   Atom wmState = SApiX11.XInternAtom(SWindow.display, "_NET_WM_STATE", false);
@@ -217,8 +217,10 @@ Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
 
 static Void InternalUpdateWindowTitle() {
   Char buffer[BUFFER_SMALL] = "";
-  Int32 fps = 1 / GEngine.deltaTime;
-  snprintf(buffer, BUFFER_SMALL, "%s (Debug Mode) => FPS:%d | MS:%.3f", GEngine.windowApi.title, fps, GEngine.deltaTime);
+  String title = GEngine.windowApi.title;
+  Double deltaTime = GEngine.timerApi.deltaTime;
+  UInt32 frameRate = GEngine.timerApi.frameRate;
+  snprintf(buffer, BUFFER_SMALL, "%s (Debug Mode) => FPS:%u | MS:%f", title, frameRate, deltaTime);
   SApiX11.XStoreName(SWindow.display, SWindow.window, buffer);
 }
 
@@ -359,7 +361,7 @@ static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
   }
 }
 
-Bool ApiX11Init(FWindowApi* WindowApi) {
+Bool ApiX11Init(IWindowApi* WindowApi) {
   SLibX11 = EngineLoadModule("libX11.so");
   if (SLibX11 == NULL) {
     return false;

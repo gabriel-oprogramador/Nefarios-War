@@ -9,14 +9,15 @@
 
 FGT GEngine = {0};
 
-extern Bool ApiX11Init(FWindowApi* WindowApi);
+extern Bool ApiX11Init(IWindowApi* WindowApi);
 extern Void ApiEGLSwapBuffer();
 
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
-static Float SFrameBegin = 0;
+static Double SFrameStartTime = 0;
 
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
+  GEngine.timerApi.engineStartTime = EngineGetTime();
   SLogFile = fopen(SLogFilePath, "w");
   if (ApiX11Init(&GEngine.windowApi)) {
     CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title);
@@ -32,40 +33,43 @@ Void EngineShutdown() {
 }
 
 Void EngineBeginFrame() {
-  SFrameBegin = EngineGetTime();
+  SFrameStartTime = EngineGetTime();
   CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
 }
 
 Void EngineEndFrame() {
   ApiEGLSwapBuffer();
 
-  Float delta = EngineGetTime() - SFrameBegin;
-  Float remainingTime = GEngine.frameTime - delta;
-  Float threshold = 1.f;
+  Double end = EngineGetTime();
+  Double delta = end - SFrameStartTime;
+  Double target = GEngine.timerApi.frameTime;
+  Double remainingTime = target - delta;
 
-  if (GEngine.frameTime > 0) {
-    if (remainingTime > threshold) {
-      EngineWait(remainingTime * 0.9f);
-      remainingTime = GEngine.frameTime - (EngineGetTime() - SFrameBegin);
+  if(target > 0) {
+    if(remainingTime > (delta * 0.9)) {
+      EngineWait(remainingTime);
     }
-    while ((delta = EngineGetTime() - SFrameBegin) < GEngine.frameTime) {
-    }
+    while((delta = EngineGetTime() - SFrameStartTime) < target) {}
   }
-
-  GEngine.deltaTime = delta;
+  GEngine.timerApi.deltaTime = delta;
+  GEngine.timerApi.frameRate = ceil(1.f / delta);
 }
 
-Void EngineFullscreen(Bool bIsFullscreen) {
+Void EngineSetFullscreen(Bool bIsFullscreen) {
   CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bIsFullscreen);
 }
 
-Float EngineGetTime() {
+Double EngineGetTime() {
   struct timespec timeSpec;
   clock_gettime(CLOCK_MONOTONIC, &timeSpec);
-  return (Float)(timeSpec.tv_sec + timeSpec.tv_nsec / 1000000000.0f);
+  return (Double)(timeSpec.tv_sec + timeSpec.tv_nsec / 1000000000.0f);
 }
 
-Void EngineWait(Float Milliseconds) {
+Void EngineSetTargetFPS(UInt32 Target){
+  GEngine.timerApi.frameTime = 1.f / Target;
+}
+
+Void EngineWait(Double Milliseconds) {
   struct timespec time;
   Int32 sec = (Int32)(Milliseconds / 1000);
   Int32 nSeg = (Int32)(Milliseconds - sec * 1000) * 1000000.0f;
