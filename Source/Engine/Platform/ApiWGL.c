@@ -14,42 +14,45 @@ static Void* SLibGdi32 = NULL;
 static Void* SLibGL32 = NULL;
 
 static String SLibGdi32Names[] = {
-    "ChoosePixelFormat", //
-    "SetPixelFormat",    //
-    "SwapBuffers",       //
-    "\0"                 //
-};
+    "ChoosePixelFormat",
+    "SetPixelFormat",
+    "SwapBuffers",
+    "\0"};
 
+// clang-format off
 static struct {
   int (*ChoosePixelFormat)(HDC hdc, const PIXELFORMATDESCRIPTOR* ppfd);
-  BOOL(*SetPixelFormat) (HDC hdc, int format, const PIXELFORMATDESCRIPTOR* ppfd);
-  BOOL(*SwapBuffers) (HDC unnamedParam1);
+  BOOL (*SetPixelFormat)(HDC hdc, int format, const PIXELFORMATDESCRIPTOR* ppfd);
+  BOOL (*SwapBuffers)(HDC unnamedParam1);
 } SApiGdi;
+// clang-format on
 
 static String SLibWglNames[] = {
-    "wglCreateContext",    //
-    "wglMakeCurrent",      //
-    "wglGetProcAddress",   //
-    "wglDeleteContext",    //
-    "wglSwapLayerBuffers", //
-    "\0"                   //
-};
+    "wglCreateContext",
+    "wglMakeCurrent",
+    "wglGetProcAddress",
+    "wglDeleteContext",
+    "wglSwapLayerBuffers",
+    "\0"};
+
+// clang-format off
+static struct {
+  HGLRC(*wglCreateContext) (HDC unnamedParam1);
+  BOOL(*wglMakeCurrent) (HDC unnamedParam1, HGLRC unnamedParam2);
+  PROC(*wglGetProcAddress) (LPCSTR unnamedParam1);
+  BOOL(*wglDeleteContext) (HGLRC unnamedParam1);
+  BOOL(*wglSwapLayerBuffers) (HDC, UINT);
+} SApiWgl;
+// clang-format on
 
 static struct {
-  HGLRC(*wglCreateContext)
-  (HDC unnamedParam1);
-  BOOL(*wglMakeCurrent)
-  (HDC unnamedParam1, HGLRC unnamedParam2);
-  PROC(*wglGetProcAddress)
-  (LPCSTR unnamedParam1);
-  BOOL(*wglDeleteContext)
-  (HGLRC unnamedParam1);
-  BOOL(*wglSwapLayerBuffers)
-  (HDC, UINT);
-} SApiWgl;
+  HWND window;
+  HDC device;
+  HGLRC context;
+} SWglInfo;
 
-Void ApiGdiSwapBuffer(HDC Device){
-  SApiGdi.SwapBuffers(Device);
+Void ApiGdiSwapBuffer() {
+  SApiGdi.SwapBuffers(SWglInfo.device);
 }
 
 HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits) {
@@ -60,7 +63,7 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
   SLibGdi32 = EngineLoadModule("gdi32.dll");
   SLibGL32 = EngineLoadModule("opengl32.dll");
 
-  if (SLibGdi32 == NULL || SLibGL32 == NULL) {
+  if(SLibGdi32 == NULL || SLibGL32 == NULL) {
     GT_LOG(LOG_FATAL, "API:WGL Lib gdi32 or opengl32 not loaded");
     ApiWin32DestroyWindow(dummyWindow);
     return NULL;
@@ -84,26 +87,26 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
       0, 0, 0, 0};
 
   Int32 pixelFormat = SApiGdi.ChoosePixelFormat(dummyDc, &pfd);
-  if (!pixelFormat) {
+  if(!pixelFormat) {
     GT_LOG(LOG_FATAL, "API:WGL Not choose Pixel Format");
     ApiWin32DestroyWindow(dummyWindow);
     return NULL;
   }
 
-  if (!SApiGdi.SetPixelFormat(dummyDc, pixelFormat, &pfd)) {
+  if(!SApiGdi.SetPixelFormat(dummyDc, pixelFormat, &pfd)) {
     GT_LOG(LOG_FATAL, "API:WGL Not set Pixel Format");
     ApiWin32DestroyWindow(dummyWindow);
     return NULL;
   }
 
   renderContext = SApiWgl.wglCreateContext(dummyDc);
-  if (!renderContext) {
+  if(!renderContext) {
     GT_LOG(LOG_FATAL, "API:WGL Render Context Invalid");
     ApiWin32DestroyWindow(dummyWindow);
     return NULL;
   }
 
-  if (!SApiWgl.wglMakeCurrent(dummyDc, renderContext)) {
+  if(!SApiWgl.wglMakeCurrent(dummyDc, renderContext)) {
     GT_LOG(LOG_FATAL, "API:WGL Not make current Reder Context");
     ApiWin32DestroyWindow(dummyWindow);
     return NULL;
@@ -127,12 +130,12 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
       WGL_DEPTH_BITS_ARB, DepthBits};
 
   OnWglChoosePixelFormatARB(Device, pixelFormatAttribList, NULL, 1, &pixelFormat, (UINT*)&pixelFormatCount);
-  if (pixelFormatCount < 0) {
+  if(pixelFormatCount < 0) {
     GT_LOG(LOG_FATAL, "API:WGL Not choose modern Pixel Format");
     return NULL;
   }
 
-  if (!SApiGdi.SetPixelFormat(Device, pixelFormat, &pfd)) {
+  if(!SApiGdi.SetPixelFormat(Device, pixelFormat, &pfd)) {
     GT_LOG(LOG_FATAL, "API:WGL Not set modern Pixel Format");
     return NULL;
   }
@@ -145,17 +148,17 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
       WGL_CONTEXT_FLAGS_ARB,
 #ifdef DEBUG_MODE
       WGL_CONTEXT_DEBUG_BIT_ARB |
-#endif // DEBUG_MODE
+#endif  // DEBUG_MODE
           WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
       0};
 
   renderContext = OnWglCreateContextAttribsARB(Device, 0, contextAttribs);
-  if (!renderContext) {
+  if(!renderContext) {
     GT_LOG(LOG_FATAL, "API:WGL Not Create Modern Context");
     return NULL;
   }
 
-  if (!SApiWgl.wglMakeCurrent(Device, renderContext)) {
+  if(!SApiWgl.wglMakeCurrent(Device, renderContext)) {
     GT_LOG(LOG_FATAL, "API:WGL Not Make Current Modern Context");
     return NULL;
   }
@@ -163,7 +166,11 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
   GT_LOG(LOG_INFO, "API:WGL Created OpenGL Context => Core Profile:%d.%d", Major, Minor);
   ApiGLLoadFuntions(SLibGL32, false);
 
+  SWglInfo.window = Window;
+  SWglInfo.device = Device;
+  SWglInfo.context = renderContext;
+
   return renderContext;
 }
 
-#endif // PLATFORM_WINDOWS
+#endif  // PLATFORM_WINDOWS

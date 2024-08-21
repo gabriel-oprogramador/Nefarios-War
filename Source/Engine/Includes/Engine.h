@@ -7,30 +7,36 @@ typedef struct {
   Int32 width;
   Int32 height;
   String title;
-  Bool bFullsreen;
+  Bool bFullscreen;
   Bool bShouldClose;
   Void (*OnWindowCreate)(Int32, Int32, String);
   Void (*OnWindowUpdate)();
   Void (*OnWindowDestroy)();
   Void (*OnWindowFullscreen)(Bool);
-} FWindowApi;
+} IWindowApi;
 
 typedef struct {
   // Future implementation of the audio API!
-} FAudioApi;
+} IAudioApi;
 
 typedef struct {
   UChar previousKeys[KEY_MAX];
   UChar currentKeys[KEY_MAX];
   Float mousePosition[2];
-} FInputApi;
+} IInputApi;
+
+typedef struct{
+  Float frameTime;
+  UInt32 frameRate;
+  Double deltaTime;
+  Float engineStartTime;
+} ITimerApi;
 
 typedef struct {
-  FWindowApi windowApi;
-  FAudioApi audioApi;
-  FInputApi inputApi;
-  Float deltaTime;
-  Float frameTime;
+  IWindowApi windowApi;
+  IAudioApi audioApi;
+  IInputApi inputApi;
+  ITimerApi timerApi;
 } FGT;
 
 extern FGT GEngine;
@@ -40,15 +46,15 @@ Bool EngineShouldClose();
 Void EngineShutdown();
 Void EngineBeginFrame();
 Void EngineEndFrame();
-Void EngineFullscreen(Bool bIsFullscreen);
+Void EngineSetFullscreen(Bool bIsFullscreen);
 
+// Returns in Seconds
+Double EngineGetTime();
 Void EngineSetTargetFPS(UInt32 Target);
-Float EngineGetTime();
-Void EngineWait(Float Time);
+Void EngineWait(Double Milliseconds);
 
 // Graphic
 Bool EngineInitGraphic();
-
 
 // Module
 Void* EngineLoadModule(String Name);

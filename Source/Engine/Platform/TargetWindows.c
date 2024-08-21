@@ -1,14 +1,16 @@
 #ifdef PLATFORM_WINDOWS
-#include "Engine.h"
-
 #include <windows.h>
+#include "Engine.h"
 
 FGT GEngine = {0};
 
-extern Bool ApiWin32Init(FWindowApi* WindowApi);
+extern Bool ApiWin32Init(IWindowApi* WindowApi);
+extern Void ApiGdiSwapBuffer();
 
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
+static LARGE_INTEGER STimeFrequency = {0};
+static Double SFrameStartTime = 0;
 
 static struct {
   HANDLE hConsole;
@@ -24,9 +26,11 @@ static Void InitWin32Console() {
 }
 
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
+  GEngine.timerApi.engineStartTime = EngineGetTime();
   InitWin32Console();
+  QueryPerformanceFrequency(&STimeFrequency);
   SLogFile = fopen(SLogFilePath, "w");
-  if (ApiWin32Init(&GEngine.windowApi)) {
+  if(ApiWin32Init(&GEngine.windowApi)) {
     CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title)
   }
 }
@@ -40,35 +44,53 @@ Void EngineShutdown() {
 }
 
 Void EngineBeginFrame() {
+  SFrameStartTime = EngineGetTime();
   CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
 }
 
 Void EngineEndFrame() {
+  ApiGdiSwapBuffer();
+  Double end = EngineGetTime();
+  Double delta = end - SFrameStartTime;
+  Double target = GEngine.timerApi.frameTime;
+  Double remainingTime = target - delta;
+
+  if(target > 0) {
+    if(remainingTime > (delta * 0.9)) {
+      EngineWait(remainingTime);
+    }
+    while((delta = EngineGetTime() - SFrameStartTime) < target) {}
+  }
+
+  GEngine.timerApi.deltaTime = delta;
+  GEngine.timerApi.frameRate = ceil(1.f / delta);
 }
 
-Void EngineFullscreen(Bool bIsFullscreen){
-
+Void EngineSetFullscreen(Bool bIsFullscreen) {
+  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bIsFullscreen);
 }
 
-Void EngineSetTargetFPS(UInt32 Target){
-
+Double EngineGetTime() {
+  LARGE_INTEGER counter;
+  QueryPerformanceCounter(&counter);
+  return (Double)(counter.QuadPart) / STimeFrequency.QuadPart;
 }
 
-Float EngineGetTime(){
-  return 0.016f;
+Void EngineSetTargetFPS(UInt32 Target) {
+  GEngine.timerApi.frameTime = 1.f / Target;
 }
 
-Void EngineWait(Float Time){
-
+Void EngineWait(Double Milliseconds) {
+  Sleep(Milliseconds);
 }
 
-// Moudules
+// Module
 Void* EngineLoadModule(String Name) {
   return LoadLibraryA(Name);
 }
 
 Void EngineFreeModule(Void* Module) {
-  if (Module != NULL) {
+  if(Module != NULL) {
     FreeLibrary((HMODULE)Module);
   }
 }
@@ -82,15 +104,15 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
   Void* function = NULL;
   Int32 index = 0;
 
-  while (**names) {
+  while(**names) {
     function = EngineGetFunc(Module, *names);
-    if (function != NULL) {
+    if(function != NULL) {
       Void* addr = (Char*)Api + index * sizeof(Void*);
       memcpy(addr, &function, sizeof(Void*));
-      if (bDebugMode) {
+      if(bDebugMode) {
         GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }
-    } else if (bDebugMode) {
+    } else if(bDebugMode) {
       GT_LOG(LOG_INFO, "Function Not Loaded:%s", *names);
     }
     names++;
@@ -105,14 +127,14 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
   UInt16 logLevel = Level & 0xFF;
 
   enum {
-    LC_WHITE = 15,   //
-    LC_GREEN = 10,   //
-    LC_YELLOW = 14,  //
-    LC_RED = 12,     //
-    LC_DARK_RED = 4, //
+    LC_WHITE = 15,
+    LC_GREEN = 10,
+    LC_YELLOW = 14,
+    LC_RED = 12,
+    LC_DARK_RED = 4,
   } color;
 
-  switch (logLevel) {
+  switch(logLevel) {
     case LOG_INFO: {
       logTag = (String) "[LOG INFO] =>";
       color = LC_WHITE;
@@ -134,6 +156,7 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
       color = LC_DARK_RED;
     } break;
   }
+
   SetConsoleTextAttribute(SConsole.hConsole, color);
   va_list args;
   va_start(args, Format);
@@ -142,11 +165,11 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
   va_end(args);
   SetConsoleTextAttribute(SConsole.hConsole, SConsole.defaultAttribute);
 
-  if (SLogFile != NULL && bIsFast != 1) {
+  if(SLogFile != NULL && bIsFast != 1) {
     va_start(args, Format);
     vfprintf(SLogFile, logBuffer, args);
     va_end(args);
   }
 }
 
-#endif // PLATFORM_WINDOWS
+#endif  // PLATFORM_WINDOWS
