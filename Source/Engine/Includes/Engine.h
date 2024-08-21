@@ -1,7 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
 
-#define CALL_API(Function, DefaultReturn, ...) (Function != NULL) ? Function(__VA_ARGS__) : DefaultReturn;
 
 typedef struct {
   Int32 width;
@@ -9,10 +8,14 @@ typedef struct {
   String title;
   Bool bFullscreen;
   Bool bShouldClose;
+  Bool bShowCursor;
+  Bool bCursorCaptured;
   Void (*OnWindowCreate)(Int32, Int32, String);
   Void (*OnWindowUpdate)();
   Void (*OnWindowDestroy)();
   Void (*OnWindowFullscreen)(Bool);
+  Void (*OnWindowShowCursor)(Bool);
+  Void (*OnWindowSetCursorPos)(UInt32, UInt32);
 } IWindowApi;
 
 typedef struct {
@@ -46,7 +49,7 @@ Bool EngineShouldClose();
 Void EngineShutdown();
 Void EngineBeginFrame();
 Void EngineEndFrame();
-Void EngineSetFullscreen(Bool bIsFullscreen);
+Void EngineFullscreen(Bool bFullscreen);
 
 // Returns in Seconds
 Double EngineGetTime();

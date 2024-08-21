@@ -1,8 +1,8 @@
 #include "Game.h"
 
+#include "Engine.h"
 #include "GL/ApiGL.h"
 #include "GameFramework.h"
-#include "Engine.h"
 
 // Called when starting the engine.
 Void GameInit() {
@@ -20,24 +20,36 @@ Void GameUpdate(Float DeltaTime) {
 
   /*GT_LOGTEMP(LOG_INFO, "Timer => FPS:%d Ms:%f", GEngine.timerApi.frameRate, GEngine.timerApi.deltaTime);*/
 
-  if(FInputIsPressed(KEY_ESCAPE)) {
+  if (FInputIsPressed(KEY_F1)) {
+    static Bool bShow = false;
+    bShow = !bShow;
+    if (bShow) {
+      FInputSetInputMode(IM_GAME_ONLY);
+      GT_LOGTEMP(LOG_WARNING, "Input Model => Game Only");
+    } else {
+      FInputSetInputMode(IM_UI_ONLY);
+      GT_LOGTEMP(LOG_WARNING, "Input Model => UI Only");
+    }
+  }
+
+  if (FInputIsPressed(KEY_ESCAPE)) {
     GEngine.windowApi.bShouldClose = true;
   }
 
-  if(FInputIsPressed(KEY_TAB)) {
+  if (FInputIsPressed(KEY_TAB)) {
     GT_LOGTEMP(LOG_WARNING, "Toogle Fullscreen");
     static bool isFullscreen = false;
     isFullscreen = !isFullscreen;
-    EngineSetFullscreen(isFullscreen);
+    EngineFullscreen(isFullscreen);
   }
 
-  if(FInputIsPressed(KEY_W)) {
+  if (FInputIsPressed(KEY_W)) {
     GT_LOGTEMP(LOG_WARNING, "Key Pressed:W");
   }
-  if(FInputIsRelease(KEY_W)) {
+  if (FInputIsRelease(KEY_W)) {
     GT_LOGTEMP(LOG_WARNING, "Key Release:W");
   }
-  if(FInputIsRepeat(KEY_W)) {
+  if (FInputIsRepeat(KEY_W)) {
     /*GT_LOGTEMP(LOG_WARNING, "Key Reeat:W");*/
   }
 }

@@ -19,6 +19,8 @@ extern Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Mino
 
 static Void* SLibX11 = NULL;
 static String SApiX11Name[] = {
+    "XWarpPointer",               //
+    "XUndefineCursor",            //
     "XDisplayKeycodes",           //
     "XGetKeyboardMapping",        //
     "XFree",                      //
@@ -49,6 +51,8 @@ static String SApiX11Name[] = {
 };
 
 static struct {
+  int (*XWarpPointer)(Display*, Window, Window, int, int, unsigned int, unsigned int, int, int);
+  int (*XUndefineCursor)(Display*, Window);
   int (*XDisplayKeycodes)(Display*, int*, int*);
   KeySym* (*XGetKeyboardMapping)(Display*, KeyCode, int, int*);
   int (*XFree)(void*);
@@ -137,9 +141,9 @@ Void ApiX11WindowCreate(Int32 Width, Int32 Height, String Title) {
 }
 
 Void ApiX11WindowUpdate() {
-  #ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
   InternalUpdateWindowTitle();
-  #endif// DEBUG_MODE
+#endif // DEBUG_MODE
 
   XEvent event;
   memcpy(GEngine.inputApi.previousKeys, GEngine.inputApi.currentKeys, sizeof(GEngine.inputApi.previousKeys));
@@ -194,10 +198,6 @@ Void ApiX11WindowDestroy() {
 }
 
 Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
-  if (GEngine.windowApi.bFullscreen == bIsFullscreen) {
-    return;
-  }
-
   XEvent event;
   GEngine.windowApi.bFullscreen = !GEngine.windowApi.bFullscreen;
   SWindow.sizeHint->flags = (bIsFullscreen) ? 0 : PMinSize | PMaxSize;
@@ -213,6 +213,27 @@ Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
   event.xclient.data.l[1] = wmFullscreen;
   event.xclient.data.l[2] = 0;
   SApiX11.XSendEvent(SWindow.display, DefaultRootWindow(SWindow.display), false, StructureNotifyMask, &event);
+}
+
+Void ApiX11WindowShowCursor(Bool bShow) {
+  GEngine.windowApi.bShowCursor = bShow;
+
+  if (bShow) {
+    SApiX11.XUndefineCursor(SWindow.display, SWindow.window);
+  } else {
+    Pixmap noData;
+    Cursor invisibleCursor;
+    XColor black;
+    static Char noDataBits[] = {0};
+    noData = SApiX11.XCreateBitmapFromData(SWindow.display, SWindow.window, noDataBits, 1, 1);
+    black.red = black.green = black.blue = 0;
+    invisibleCursor = SApiX11.XCreatePixmapCursor(SWindow.display, noData, noData, &black, &black, 0, 0);
+    SApiX11.XDefineCursor(SWindow.display, SWindow.window, invisibleCursor);
+  }
+}
+
+Void ApiX11SetCursorPos(UInt32 X, UInt32 Y) {
+  SApiX11.XWarpPointer(SWindow.display, None, SWindow.window, 0, 0, 0, 0, X, Y);
 }
 
 static Void InternalUpdateWindowTitle() {
@@ -371,6 +392,8 @@ Bool ApiX11Init(IWindowApi* WindowApi) {
   WindowApi->OnWindowUpdate = &ApiX11WindowUpdate;
   WindowApi->OnWindowDestroy = &ApiX11WindowDestroy;
   WindowApi->OnWindowFullscreen = &ApiX11WindowFullscreen;
+  WindowApi->OnWindowShowCursor = &ApiX11WindowShowCursor;
+  WindowApi->OnWindowSetCursorPos = &ApiX11SetCursorPos;
   GT_LOG(LOG_INFO, "API:X11 Initialized");
   return true;
 }

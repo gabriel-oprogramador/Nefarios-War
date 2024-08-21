@@ -45,27 +45,28 @@ Void EngineEndFrame() {
   Double target = GEngine.timerApi.frameTime;
   Double remainingTime = target - delta;
 
-  if(target > 0) {
-    if(remainingTime > (delta * 0.9)) {
+  if (target > 0) {
+    if (remainingTime > (delta * 0.9)) {
       EngineWait(remainingTime);
     }
-    while((delta = EngineGetTime() - SFrameStartTime) < target) {}
+    while ((delta = EngineGetTime() - SFrameStartTime) < target) {
+    }
   }
   GEngine.timerApi.deltaTime = delta;
-  GEngine.timerApi.frameRate = ceil(1.f / delta);
+  GEngine.timerApi.frameRate = ceil(1.0f / delta);
 }
 
-Void EngineSetFullscreen(Bool bIsFullscreen) {
-  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bIsFullscreen);
+Void EngineFullscreen(Bool bFullscreen) {
+  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bFullscreen);
 }
 
 Double EngineGetTime() {
   struct timespec timeSpec;
   clock_gettime(CLOCK_MONOTONIC, &timeSpec);
-  return (Double)(timeSpec.tv_sec + timeSpec.tv_nsec / 1000000000.0f);
+  return (Double)timeSpec.tv_sec + (Double)timeSpec.tv_nsec / 1000000000.0f;
 }
 
-Void EngineSetTargetFPS(UInt32 Target){
+Void EngineSetTargetFPS(UInt32 Target) {
   GEngine.timerApi.frameTime = 1.f / Target;
 }
 

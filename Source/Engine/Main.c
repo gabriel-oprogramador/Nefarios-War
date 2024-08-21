@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "GameFramework.h"
 
 // Game Entrypoint
 extern Void GameInit();
@@ -8,6 +9,7 @@ extern Void GameStop();
 
 static Bool SbInitGamePlay = true;
 static Bool SbGameIsRunning = false;
+static Float deltaTime = 0.f;
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
@@ -16,13 +18,16 @@ int GTmain(int argc, const char** argv) {
   GameInit();
 
   while(!EngineShouldClose()) {
+    deltaTime = GEngine.timerApi.deltaTime;
+
     EngineBeginFrame();
     if(SbInitGamePlay && !SbGameIsRunning) {
       SbGameIsRunning = true;
       GameStart();
     }
     if(SbInitGamePlay) {
-      GameUpdate(GEngine.timerApi.deltaTime);
+      FInputUpdate(deltaTime);
+      GameUpdate(deltaTime);
     }
     EngineEndFrame();
   }
