@@ -27,6 +27,7 @@ static Void InitWin32Console() {
 
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
   GEngine.timerApi.engineStartTime = EngineGetTime();
+  GEngine.windowApi.bShowCursor = true; // It is necessary to start as true to avoid bugs with WinApi
   InitWin32Console();
   QueryPerformanceFrequency(&STimeFrequency);
   SLogFile = fopen(SLogFilePath, "w");
@@ -66,8 +67,8 @@ Void EngineEndFrame() {
   GEngine.timerApi.frameRate = ceil(1.f / delta);
 }
 
-Void EngineSetFullscreen(Bool bIsFullscreen) {
-  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bIsFullscreen);
+Void EngineFullscreen(Bool bFullscreen) {
+  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bFullscreen);
 }
 
 Double EngineGetTime() {

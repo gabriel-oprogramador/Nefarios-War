@@ -185,9 +185,6 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
 }
 
 Void ApiWin32SetFullscreen(Bool bIsFullscreen) {
-  if(GEngine.windowApi.bFullscreen == bIsFullscreen) {
-    return;
-  }
   GEngine.windowApi.bFullscreen = bIsFullscreen;
 
   if(bIsFullscreen) {
@@ -209,6 +206,29 @@ Void ApiWin32SetFullscreen(Bool bIsFullscreen) {
     ShowWindow(SWindow.window, SW_SHOW);
     UpdateWindow(SWindow.window);
   }
+}
+
+Void ApiWin32ShowCursor(Bool bShow) {
+  if(GEngine.windowApi.bShowCursor == bShow){
+    return;
+  }
+  GEngine.windowApi.bShowCursor = bShow;
+  SApiUser32.ShowCursor(bShow);
+}
+
+Void ApiWin32SetCursorPos(UInt32 X, UInt32 Y) {
+  RECT windowRect = {0};
+  POINT clientTopLeft = {0};
+
+  GetWindowRect(SWindow.window, &windowRect);
+  ClientToScreen(SWindow.window, &clientTopLeft);
+
+  UInt32 borderOffsetX = clientTopLeft.x - windowRect.left;
+  UInt32 borderOffsetY = clientTopLeft.y - windowRect.top;
+  UInt32 xScreen = windowRect.left + borderOffsetX + X;
+  UInt32 yScreen = windowRect.top + borderOffsetY + Y;
+
+  SetCursorPos(xScreen, yScreen);
 }
 
 static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed) {
@@ -390,6 +410,8 @@ Bool ApiWin32Init(IWindowApi* WindowApi) {
   WindowApi->OnWindowUpdate = &ApiWin32WindowUpdate;
   WindowApi->OnWindowDestroy = &ApiWin32WindowDestroy;
   WindowApi->OnWindowFullscreen = &ApiWin32SetFullscreen;
+  WindowApi->OnWindowShowCursor = &ApiWin32ShowCursor;
+  WindowApi->OnWindowSetCursorPos = &ApiWin32SetCursorPos;
   GT_LOG(LOG_INFO, "API:WIN32 Initialized");
   return true;
 }

@@ -4,17 +4,33 @@
 static EInputMode SInputMode;
 
 Void FInputUpdate(Float DeltaTime) {
-  if (GEngine.windowApi.bCursorCaptured) {
+  if(GEngine.windowApi.bCursorCaptured) {
     FInputSetCursorPos((FVector2){GEngine.windowApi.width / 2.f, GEngine.windowApi.height / 2.f});
+  }
+
+  switch(SInputMode) {
+    case IM_GAME_ONLY: {
+      // Calls only Game Events
+    } break;
+    case IM_UI_ONLY: {
+      // Calls only UI Events
+    } break;
+    case IM_GAME_UI: {
+      // Calls only Game and UI Events
+    } break;
+    case IM_EDITOR_ONLY: {
+      // Calls only Editor Events
+    } break;
   }
 }
 
 EInputMode FInputGetInputMode() {
   return SInputMode;
 }
+
 Void FInputSetInputMode(EInputMode InputMode) {
   SInputMode = InputMode;
-  switch (InputMode) {
+  switch(InputMode) {
     case IM_GAME_ONLY: {
       FInputShowCursor(false);
       FInputCaptureCursor(true);
@@ -26,6 +42,8 @@ Void FInputSetInputMode(EInputMode InputMode) {
     case IM_GAME_UI: {
       FInputShowCursor(true);
       FInputCaptureCursor(false);
+    } break;
+    case IM_EDITOR_ONLY: {
     } break;
   }
 }

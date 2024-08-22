@@ -25,10 +25,10 @@ Void GameUpdate(Float DeltaTime) {
     bShow = !bShow;
     if (bShow) {
       FInputSetInputMode(IM_GAME_ONLY);
-      GT_LOGTEMP(LOG_WARNING, "Input Model => Game Only");
+      GT_LOGTEMP(LOG_WARNING, "Input Mode => Game Only");
     } else {
       FInputSetInputMode(IM_UI_ONLY);
-      GT_LOGTEMP(LOG_WARNING, "Input Model => UI Only");
+      GT_LOGTEMP(LOG_WARNING, "Input Mode => UI Only");
     }
   }
 

@@ -1308,7 +1308,7 @@ void ApiGLLoadFuntions(void* LibOpenGL, Bool bDebugMode) {
   }
 
   GT_LOG(LOG_INFO, "API:GL Initialized");
-  GT_LOG(LOG_INFO, "API:GL Loaded Functions");
+  GT_LOG(LOG_INFO, "API:GL Functions Loaded");
 }
 
 #endif // PLATFORM_WINDOWS
@@ -1345,7 +1345,7 @@ Void ApiGLLoadFuntions(Bool bDebugMode) {
   }
 
   GT_LOG(LOG_INFO, "API:GL Initialized");
-  GT_LOG(LOG_INFO, "API:GL Loaded Functions");
+  GT_LOG(LOG_INFO, "API:GL Functions Loaded");
 }
 
 #endif // PLATFORM_LINUX
