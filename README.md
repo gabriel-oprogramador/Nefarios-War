@@ -1,3 +1,14 @@
+## Platform Support Status
+![Windows](https://img.shields.io/badge/Windows-OK-green) => 
+![Windows](https://img.shields.io/badge/Win32-Suported-green)
+![Windows](https://img.shields.io/badge/WGL-Suported-green)
+![Windows](https://img.shields.io/badge/OpenGL-Suported-green)  
+
+![Linux](https://img.shields.io/badge/Linux-OK-green) =>
+![Linux](https://img.shields.io/badge/X11-Suported-green) 
+![Linux](https://img.shields.io/badge/EGL-Suported-green) 
+![Linux](https://img.shields.io/badge/OpenGL-Suported-green)  
+
 # Note
 Sorry for any errors, this was all translated using Google Translate.  
 To compile this project use the tools listed in the Dependencies part.  

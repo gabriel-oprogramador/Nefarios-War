@@ -8,7 +8,9 @@ CONTENT_DIR = $(abspath Content/)
 
 INCLUDES = -ISource/Engine -ISource/Engine/Includes -ISource/Engine/Game -ISource/Game/Includes
 DEFINES = -DGAME_NAME=$(GAME)
-FLAGS =
+FLAGS = 
+#--target=x86_64_windows_msvc
+KIND =
 
 define MAKE_PAKAGE
 mkdir -p $(BIN_OUTPUT)/Data
@@ -16,23 +18,12 @@ cp -r $(CONFIG_DIR) $(BIN_OUTPUT)/Data/
 cp -r $(CONTENT_DIR) $(BIN_OUTPUT)/Data/
 endef
 
-config = debug
-ifeq ($(config), debug)
-	DEFINES += -DDEBUG_MODE -DCONFIG_PATH=$(CONFIG_DIR)/ -DCONTENT_PATH=$(CONTENT_DIR)/
-	FLAGS += -g -Wall
-	CONFIG = Debug
-	MAKE_PAKAGE =
-else
-	DEFINES += -DRELEASE_MODE -DCONFIG_PATH=./Data/Config/ -DCONTENT_PATH=./Data/Content/
-	FLAGS += -O3
-	CONFIG = Release
-endif
-
 ifeq ($(OS), Windows_NT)
 	DEFINES += -DPLATFORM_WINDOWS
 	FLAGS += -std=c99
 	PLATFORM = Windows
 	EXTENSION = .exe
+	KIND = -mwindows
 	LIBS =
 	LIBS_PATH =
 else ifeq ($(shell uname), Linux)
@@ -42,6 +33,20 @@ else ifeq ($(shell uname), Linux)
 	LIBS = -lm
 	LIBS_PATH =
 endif
+
+config = debug
+ifeq ($(config), debug)
+	DEFINES += -DDEBUG_MODE -DCONFIG_PATH=$(CONFIG_DIR)/ -DCONTENT_PATH=$(CONTENT_DIR)/
+	FLAGS += -g -Wall
+	CONFIG = Debug
+	KIND =
+	MAKE_PAKAGE =
+else
+	DEFINES += -DRELEASE_MODE -DCONFIG_PATH=./Data/Config/ -DCONTENT_PATH=./Data/Content/
+	FLAGS += -O3
+	CONFIG = Release
+endif
+
 
 ifeq ($(CC), clang)
 	CL_GENERATE = @sed -e '1s/^/[\n''/' -e '$$s/,$$/\n'']/' $(JSON) > compile_commands.json
@@ -88,7 +93,7 @@ rebuild: clean run
 
 $(GAME): install $(OBJ)
 	@echo 'Linking -> $(BIN_OUTPUT)/$(GAME)$(EXTENSION)'
-	@$(CC) $(OBJ) $(FLAGS) $(LIBS_PATH) $(LIBS) -o$(BIN_OUTPUT)/$(GAME)$(EXTENSION)
+	@$(CC) $(KIND) $(OBJ) $(FLAGS) $(LIBS_PATH) $(LIBS) -o$(BIN_OUTPUT)/$(GAME)$(EXTENSION)
 	@$(CL_GENERATE)
 	@$(MAKE_PAKAGE)
 

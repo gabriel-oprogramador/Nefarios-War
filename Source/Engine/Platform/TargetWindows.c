@@ -26,11 +26,11 @@ static Void InitWin32Console() {
 }
 
 Void EngineInit(Int32 Width, Int32 Height, String Title) {
-  GEngine.timerApi.engineStartTime = EngineGetTime();
-  GEngine.windowApi.bShowCursor = true; // It is necessary to start as true to avoid bugs with WinApi
-  InitWin32Console();
   QueryPerformanceFrequency(&STimeFrequency);
-  SLogFile = fopen(SLogFilePath, "w");
+  GEngine.timerApi.engineStartTime = EngineGetTime();
+  GEngine.windowApi.bShowCursor = true;  // It is necessary to start as true to avoid bugs with WinApi
+  InitWin32Console();
+  fopen_s(&SLogFile, SLogFilePath, "w");
   if(ApiWin32Init(&GEngine.windowApi)) {
     CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title)
   }

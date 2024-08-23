@@ -3,7 +3,6 @@
 #include <windowsx.h>
 
 #include "Engine.h"
-
 #include "GL/ApiGL.h"
 
 #define CODE_WINDOW_CLOSE WM_USER + 1
@@ -14,6 +13,14 @@ extern Void ApiGdiSwapBuffer(HDC Device);
 static Void* SLibUser32 = NULL;
 
 static const char* SLibUser32Names[] = {
+    "EnumDisplaySettingsA",
+    "ChangeDisplaySettingsA",
+    "SetCursorPos",
+    "ClientToScreen",
+    "ShowWindow",
+    "UpdateWindow",
+    "GetWindowPlacement",
+    "SetWindowPlacement",
     "SetWindowTextA",
     "ShowCursor",
     "RegisterClassExA",
@@ -25,6 +32,7 @@ static const char* SLibUser32Names[] = {
     "DispatchMessageA",
     "PostMessageA",
     "GetSystemMetrics",
+    "GetWindowLongPtrA",
     "SetWindowLongPtrA",
     "SetWindowPos",
     "GetWindowRect",
@@ -38,6 +46,14 @@ static const char* SLibUser32Names[] = {
 
 // clang-format off
 static struct {
+  BOOL (*EnumDisplaySettingsA)(LPCSTR lpszDeviceName, DWORD iModeNum, DEVMODE *lpDevMode);
+  LONG (*ChangeDisplaySettingsA)(DEVMODE *lpDevMode, DWORD dwFlags);
+  BOOL (*SetCursorPos)(int X, int Y);
+  BOOL (*ClientToScreen)(HWND hWnd, LPPOINT lpPoint);
+  BOOL (*ShowWindow)(HWND hWnd, int nCmdShow);
+  BOOL (*UpdateWindow)(HWND hWnd);
+  BOOL (*GetWindowPlacement)(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
+  BOOL (*SetWindowPlacement)(HWND hWnd, const WINDOWPLACEMENT *lpwndpl);
   BOOL (*SetWindowTextA) (HWND hWnd, LPCSTR lpString);
   int (*ShowCursor)(BOOL bShow);
   ATOM (*RegisterClassExA) (const WNDCLASSEXA* unnamedParam1);
@@ -49,6 +65,7 @@ static struct {
   LRESULT (*DispatchMessageA) (const MSG* lpMsg);
   BOOL (*PostMessageA) (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
   int (*GetSystemMetrics)(int nIndex);
+  LONG_PTR (*GetWindowLongPtrA)(HWND hWnd, int nIndex);
   LONG_PTR (*SetWindowLongPtrA) (HWND hWnd, int nIndex, LONG_PTR dwNewLong);
   BOOL (*SetWindowPos) (HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
   BOOL (*GetWindowRect) (HWND hWnd, LPRECT lpRect);
@@ -174,6 +191,8 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
       GEngine.windowApi.width = LOWORD(lParam);
       GEngine.windowApi.height = HIWORD(lParam);
       // TODO:Adjust the GL Viewport.
+      /*if(GL.glViewport)*/
+      /*GL.glViewport(0,0, LOWORD(lParam), HIWORD(lParam));*/
     } break;
 
     default: {
@@ -184,32 +203,30 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
   return 0;
 }
 
-Void ApiWin32SetFullscreen(Bool bIsFullscreen) {
-  GEngine.windowApi.bFullscreen = bIsFullscreen;
+Void ApiWin32SetFullscreen(Bool bFullscreen) {
+  GEngine.windowApi.bFullscreen = bFullscreen;
 
-  if(bIsFullscreen) {
+  if(bFullscreen) {
     DEVMODE dm = {0};
-    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
-    ChangeDisplaySettings(&dm, CDS_FULLSCREEN);
-    GetWindowPlacement(SWindow.window, &SWindow.placement);
-    SWindow.style = GetWindowLong(SWindow.window, GWL_STYLE);
+    SApiUser32.EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    SApiUser32.ChangeDisplaySettingsA(&dm, CDS_FULLSCREEN);
+    SApiUser32.GetWindowPlacement(SWindow.window, &SWindow.placement);
+    SWindow.style = SApiUser32.GetWindowLongPtrA(SWindow.window, GWL_STYLE);
 
-    SetWindowLong(SWindow.window, GWL_STYLE, WS_POPUP);
+    SApiUser32.SetWindowLongPtrA(SWindow.window, GWL_STYLE, WS_POPUP);
     UInt32 mask = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
-    SetWindowPos(SWindow.window, HWND_TOP, 0, 0, dm.dmPelsWidth, dm.dmPelsHeight, mask);
-    ShowWindow(SWindow.window, SW_SHOW);
-    UpdateWindow(SWindow.window);
+    SApiUser32.SetWindowPos(SWindow.window, HWND_TOP, 0, 0, dm.dmPelsWidth, dm.dmPelsHeight, mask);
   } else {
-    SetWindowLong(SWindow.window, GWL_STYLE, SWindow.style);
-    SetWindowPlacement(SWindow.window, &SWindow.placement);
-    ChangeDisplaySettings(NULL, 0);
-    ShowWindow(SWindow.window, SW_SHOW);
-    UpdateWindow(SWindow.window);
+    SApiUser32.SetWindowLongPtrA(SWindow.window, GWL_STYLE, SWindow.style);
+    SApiUser32.SetWindowPlacement(SWindow.window, &SWindow.placement);
+    SApiUser32.ChangeDisplaySettingsA(NULL, 0);
   }
+  SApiUser32.ShowWindow(SWindow.window, SW_SHOW);
+  SApiUser32.UpdateWindow(SWindow.window);
 }
 
 Void ApiWin32ShowCursor(Bool bShow) {
-  if(GEngine.windowApi.bShowCursor == bShow){
+  if(GEngine.windowApi.bShowCursor == bShow) {
     return;
   }
   GEngine.windowApi.bShowCursor = bShow;
@@ -220,15 +237,15 @@ Void ApiWin32SetCursorPos(UInt32 X, UInt32 Y) {
   RECT windowRect = {0};
   POINT clientTopLeft = {0};
 
-  GetWindowRect(SWindow.window, &windowRect);
-  ClientToScreen(SWindow.window, &clientTopLeft);
+  SApiUser32.GetWindowRect(SWindow.window, &windowRect);
+  SApiUser32.ClientToScreen(SWindow.window, &clientTopLeft);
 
   UInt32 borderOffsetX = clientTopLeft.x - windowRect.left;
   UInt32 borderOffsetY = clientTopLeft.y - windowRect.top;
   UInt32 xScreen = windowRect.left + borderOffsetX + X;
   UInt32 yScreen = windowRect.top + borderOffsetY + Y;
 
-  SetCursorPos(xScreen, yScreen);
+  SApiUser32.SetCursorPos(xScreen, yScreen);
 }
 
 static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed) {

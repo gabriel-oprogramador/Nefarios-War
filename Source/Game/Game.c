@@ -18,12 +18,16 @@ Void GameUpdate(Float DeltaTime) {
   GL.glClearColor(1.f, 1.f, 0.f, 1.f);
   GL.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  /*GT_LOGTEMP(LOG_INFO, "Timer => FPS:%d Ms:%f", GEngine.timerApi.frameRate, GEngine.timerApi.deltaTime);*/
+  /*Low Level Calls by GEngine..*/
+  // GT_LOGTEMP(LOG_INFO, "Timer => FPS:%u Ms:%f", GEngine.timerApi.frameRate, GEngine.timerApi.deltaTime);
 
-  if (FInputIsPressed(KEY_F1)) {
+  /*High Level Calls via GameFramework.*/
+  // GT_LOGTEMP(LOG_INFO, "Timer => FPS:%u Ms:%f", FTimerGetFrameRate(), FTimerGetDeltaTime());
+
+  if(FInputIsPressed(KEY_F1)) {
     static Bool bShow = false;
     bShow = !bShow;
-    if (bShow) {
+    if(bShow) {
       FInputSetInputMode(IM_GAME_ONLY);
       GT_LOGTEMP(LOG_WARNING, "Input Mode => Game Only");
     } else {
@@ -32,25 +36,25 @@ Void GameUpdate(Float DeltaTime) {
     }
   }
 
-  if (FInputIsPressed(KEY_ESCAPE)) {
+  if(FInputIsPressed(KEY_ESCAPE)) {
     GEngine.windowApi.bShouldClose = true;
   }
 
-  if (FInputIsPressed(KEY_TAB)) {
+  if(FInputIsPressed(KEY_TAB)) {
     GT_LOGTEMP(LOG_WARNING, "Toogle Fullscreen");
     static bool isFullscreen = false;
     isFullscreen = !isFullscreen;
     EngineFullscreen(isFullscreen);
   }
 
-  if (FInputIsPressed(KEY_W)) {
+  if(FInputIsPressed(KEY_W)) {
     GT_LOGTEMP(LOG_WARNING, "Key Pressed:W");
   }
-  if (FInputIsRelease(KEY_W)) {
+  if(FInputIsRelease(KEY_W)) {
     GT_LOGTEMP(LOG_WARNING, "Key Release:W");
   }
-  if (FInputIsRepeat(KEY_W)) {
-    /*GT_LOGTEMP(LOG_WARNING, "Key Reeat:W");*/
+  if(FInputIsRepeat(KEY_W)) {
+    /*GT_LOGTEMP(LOG_WARNING, "Key Repeat:W");*/
   }
 }
 

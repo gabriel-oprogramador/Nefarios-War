@@ -7,6 +7,11 @@ extern Void GameStart();
 extern Void GameUpdate(Float DeltaTime);
 extern Void GameStop();
 
+// Engine primary systems.
+extern Void FInputUpdate(Float DeltaTime);
+extern Void FTimerUpdate(Float DeltaTime);
+
+// Gameplay Control.
 static Bool SbInitGamePlay = true;
 static Bool SbGameIsRunning = false;
 static Float deltaTime = 0.f;
@@ -19,14 +24,14 @@ int GTmain(int argc, const char** argv) {
 
   while(!EngineShouldClose()) {
     deltaTime = GEngine.timerApi.deltaTime;
-
     EngineBeginFrame();
+    FInputUpdate(deltaTime);
     if(SbInitGamePlay && !SbGameIsRunning) {
       SbGameIsRunning = true;
       GameStart();
     }
     if(SbInitGamePlay) {
-      FInputUpdate(deltaTime);
+      FTimerUpdate(deltaTime);
       GameUpdate(deltaTime);
     }
     EngineEndFrame();

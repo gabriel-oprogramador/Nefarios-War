@@ -1,9 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-Void FInputUpdate(Float DeltaTime);
-
-// Input Manager
+/*==================/ Input Manager /===================*/
 Void FInputSetInputMode(EInputMode InputMode);
 EInputMode FInputGetInputMode();
 
@@ -21,3 +19,7 @@ Void FInputShowCursor(Bool bShow);
 
 Bool FInputIsCursorCaptured();
 Void FInputCaptureCursor(Bool bCapture);
+
+/*==================/ Timer Manager /===================*/
+Double FTimerGetDeltaTime();
+UInt32 FTimerGetFrameRate();
