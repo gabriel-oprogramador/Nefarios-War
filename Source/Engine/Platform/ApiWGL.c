@@ -8,7 +8,7 @@
 extern HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title);
 extern Void ApiWin32DestroyWindow(HWND Window);
 extern HDC ApiWin32GetDC(HWND Window);
-extern void ApiGLLoadFuntions(void* LibOpenGL, Bool bDebugMode);
+extern Void ApiGLLoadFunctions(Void* LibGL);
 
 static Void* SLibGdi32 = NULL;
 static Void* SLibGL32 = NULL;
@@ -164,7 +164,7 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
   }
 
   GT_LOG(LOG_INFO, "API:WGL Created OpenGL Context => Core Profile:%d.%d", Major, Minor);
-  ApiGLLoadFuntions(SLibGL32, false);
+  ApiGLLoadFunctions(SLibGL32);
 
   SWglInfo.window = Window;
   SWglInfo.device = Device;
