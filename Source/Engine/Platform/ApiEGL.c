@@ -5,9 +5,10 @@
 typedef EGLNativeWindowType PWindow;
 typedef EGLNativeDisplayType PDisplay;
 
-extern Void ApiGLLoadFuntions(Bool bDebugMode);
+extern Void ApiGLLoadFunctions(Void* LibGL);
 
 static Void* SLibEGL = NULL;
+static Void* SLibGL = NULL;
 
 static String SLibEGLNames[] = {
     "eglGetDisplay",          //
@@ -122,7 +123,9 @@ Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Minor, Int3
   SEglInfo.context = context;
 
   GT_LOG(LOG_INFO, "API:EGL Created OpenGL Context => Core Profile:%d.%d", Major, Minor);
-  ApiGLLoadFuntions(false);
+
+  SLibGL = EngineLoadModule("libGL.so");
+  ApiGLLoadFunctions(SLibGL);
 }
 
 #endif // PLATFORM_LINUX

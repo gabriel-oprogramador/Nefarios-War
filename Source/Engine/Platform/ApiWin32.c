@@ -191,8 +191,6 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
       GEngine.windowApi.width = LOWORD(lParam);
       GEngine.windowApi.height = HIWORD(lParam);
       // TODO:Adjust the GL Viewport.
-      /*if(GL.glViewport)*/
-      /*GL.glViewport(0,0, LOWORD(lParam), HIWORD(lParam));*/
     } break;
 
     default: {

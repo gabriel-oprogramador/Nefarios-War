@@ -1,8 +1,7 @@
-#include "Game.h"
-
+/*#include "Game.h"*/
 #include "Engine.h"
-#include "GL/ApiGL.h"
 #include "GameFramework.h"
+#include "GL/ApiGL.h"
 
 // Called when starting the engine.
 Void GameInit() {
@@ -15,8 +14,8 @@ Void GameStart() {
 // Called every frame.
 Void GameUpdate(Float DeltaTime) {
   // TODO:To Test OpenGL
-  GL.glClearColor(1.f, 1.f, 0.f, 1.f);
-  GL.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(1, 1, 0, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   /*Low Level Calls by GEngine..*/
   // GT_LOGTEMP(LOG_INFO, "Timer => FPS:%u Ms:%f", GEngine.timerApi.frameRate, GEngine.timerApi.deltaTime);
@@ -28,10 +27,10 @@ Void GameUpdate(Float DeltaTime) {
     static Bool bShow = false;
     bShow = !bShow;
     if(bShow) {
-      FInputSetInputMode(IM_GAME_ONLY);
+      FInputSetMode(IM_GAME_ONLY);
       GT_LOGTEMP(LOG_WARNING, "Input Mode => Game Only");
     } else {
-      FInputSetInputMode(IM_UI_ONLY);
+      FInputSetMode(IM_UI_ONLY);
       GT_LOGTEMP(LOG_WARNING, "Input Mode => UI Only");
     }
   }

@@ -2,8 +2,8 @@
 #include "CoreMinimal.h"
 
 /*==================/ Input Manager /===================*/
-Void FInputSetInputMode(EInputMode InputMode);
-EInputMode FInputGetInputMode();
+Void FInputSetMode(EInputMode InputMode);
+EInputMode FInputGetMode();
 
 Bool FInputIsPressed(UChar KeyCode);
 Bool FInputIsRelease(UChar KeyCode);

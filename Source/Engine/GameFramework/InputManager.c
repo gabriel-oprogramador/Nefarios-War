@@ -24,11 +24,11 @@ Void FInputUpdate(Float DeltaTime) {
   }
 }
 
-EInputMode FInputGetInputMode() {
+EInputMode FInputGetMode() {
   return SInputMode;
 }
 
-Void FInputSetInputMode(EInputMode InputMode) {
+Void FInputSetMode(EInputMode InputMode) {
   SInputMode = InputMode;
   switch(InputMode) {
     case IM_GAME_ONLY: {
