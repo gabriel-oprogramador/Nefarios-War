@@ -3,8 +3,16 @@
 #include "GameFramework.h"
 #include "GL/ApiGL.h"
 
+static struct{
+  FColor colorNormal;
+  FColor colorFullscreen;
+} SGame;
+
 // Called when starting the engine.
 Void GameInit() {
+  SGame.colorNormal = COLOR_YELLOW;
+  SGame.colorFullscreen = COLOR_PURPLE_DARK;
+  glClearColor(FCOLOR_GL(COLOR_YELLOW));
 }
 
 // Called once at the beginning of the Game.
@@ -14,7 +22,6 @@ Void GameStart() {
 // Called every frame.
 Void GameUpdate(Float DeltaTime) {
   // TODO:To Test OpenGL
-  glClearColor(1, 1, 0, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   /*Low Level Calls by GEngine..*/
@@ -44,6 +51,8 @@ Void GameUpdate(Float DeltaTime) {
     static bool isFullscreen = false;
     isFullscreen = !isFullscreen;
     EngineFullscreen(isFullscreen);
+    FColor color = (isFullscreen) ? SGame.colorFullscreen : SGame.colorNormal;
+    glClearColor(FCOLOR_GL(color));
   }
 
   if(FInputIsPressed(KEY_W)) {

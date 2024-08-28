@@ -20,6 +20,7 @@
 #define GT_LOG(ELogLevel, Format, ...)         EnginePrintLog(ELogLevel, CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define GT_LOGTEMP(ELogLevel, Format, ...)     EnginePrintLog(MAKE_LOG_FAST(ELogLevel), CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define CALL_API(Function, DefaultReturn, ...) (Function != NULL) ? Function(__VA_ARGS__) : DefaultReturn;
+#define FCOLOR_GL(FCOLOR)                      FCOLOR.r, FCOLOR.g, FCOLOR.b, FCOLOR.a
 
 #ifdef _MSC_VER
 #define GT_INLINE static __forceinline
@@ -42,10 +43,10 @@ typedef double Double;
 typedef const char* String;
 
 typedef struct {
-  UChar r;
-  UChar g;
-  UChar b;
-  UChar a;
+  Float r;
+  Float g;
+  Float b;
+  Float a;
 } FColor;
 
 typedef struct {
@@ -84,7 +85,7 @@ typedef enum {
   KEY_APOSTROPHE,            // Key: '
   KEY_COMMA,                 // Key: ,
   KEY_MINUS,                 // Key: -
-  KEY_PERIOD,                // Key: .w
+  KEY_PERIOD,                // Key: .
   KEY_SLASH,                 // Key: /
   KEY_ZERO,                  // Key: 0
   KEY_ONE,                   // Key: 1
@@ -193,5 +194,110 @@ typedef enum {
   KEY_MOUSE_WHEEL_BACKWARD,  // Mouse Backward
   KEY_MAX
 } EKeyCode;
+
+// clang-format off
+// Red
+#define COLOR_RED            (FColor){ 1.0f, 0.0f, 0.0f, 1.0f } // RGB: 255, 0, 0
+#define COLOR_RED_LIGHT      (FColor){ 1.0f, 0.5f, 0.5f, 1.0f } // RGB: 255, 128, 128
+#define COLOR_RED_DARK       (FColor){ 0.5f, 0.0f, 0.0f, 1.0f } // RGB: 128, 0, 0
+
+// Green
+#define COLOR_GREEN          (FColor){ 0.0f, 1.0f, 0.0f, 1.0f } // RGB: 0, 255, 0
+#define COLOR_GREEN_LIGH     (FColor){ 0.5f, 1.0f, 0.5f, 1.0f } // RGB: 128, 255, 128
+#define COLOR_GREEN_DARK     (FColor){ 0.0f, 0.5f, 0.0f, 1.0f } // RGB: 0, 128, 0
+
+// Blue
+#define COLOR_BLUE           (FColor){ 0.0f, 0.0f, 1.0f, 1.0f } // RGB: 0, 0, 255
+#define COLOR_BLUE_LIGHT     (FColor){ 0.5f, 0.5f, 1.0f, 1.0f } // RGB: 128, 128, 255
+#define COLOR_BLUE_DARK      (FColor){ 0.0f, 0.0f, 0.5f, 1.0f } // RGB: 0, 0, 128
+
+// Yellow
+#define COLOR_YELLOW         (FColor){ 1.0f, 1.0f, 0.0f, 1.0f } // RGB: 255, 255, 0
+#define COLOR_YELLOW_LIGHT   (FColor){ 1.0f, 1.0f, 0.5f, 1.0f } // RGB: 255, 255, 128
+#define COLOR_YELLOW_DARK     (FColor){ 0.5f, 0.5f, 0.0f, 1.0f } // RGB: 128, 128, 0
+
+// Cyan
+#define COLOR_CYAN           (FColor){ 0.0f, 1.0f, 1.0f, 1.0f } // RGB: 0, 255, 255
+#define COLOR_CYAN_LIGHT     (FColor){ 0.5f, 1.0f, 1.0f, 1.0f } // RGB: 128, 255, 255
+#define COLOR_CYAN_DARK      (FColor){ 0.0f, 0.5f, 0.5f, 1.0f } // RGB: 0, 128, 128
+
+// Magenta
+#define COLOR_MAGENTA        (FColor){ 1.0f, 0.0f, 1.0f, 1.0f } // RGB: 255, 0, 255
+#define COLOR_MAGENTA_LIGHT  (FColor){ 1.0f, 0.5f, 1.0f, 1.0f } // RGB: 255, 128, 255
+#define COLOR_MAGENTA_DARK   (FColor){ 0.5f, 0.0f, 0.5f, 1.0f } // RGB: 128, 0, 128
+
+// Orange
+#define COLOR_ORANGE         (FColor){ 1.0f, 0.65f, 0.0f, 1.0f } // RGB: 255, 165, 0
+#define COLOR_ORANGE_LIGHT   (FColor){ 1.0f, 0.8f, 0.5f, 1.0f } // RGB: 255, 204, 128
+#define COLOR_ORANGE_DARK    (FColor){ 0.5f, 0.32f, 0.0f, 1.0f } // RGB: 128, 82, 0
+
+// Purple
+#define COLOR_PURPLE         (FColor){ 0.5f, 0.0f, 0.5f, 1.0f } // RGB: 128, 0, 128
+#define COLOR_PURPLE_LIGHT   (FColor){ 0.75f, 0.5f, 0.75f, 1.0f } // RGB: 192, 128, 192
+#define COLOR_PURPLE_DARK    (FColor){ 0.25f, 0.0f, 0.25f, 1.0f } // RGB: 64, 0, 64
+
+// Brown
+#define COLOR_BROWN          (FColor){ 0.65f, 0.16f, 0.16f, 1.0f } // RGB: 165, 42, 42
+#define COLOR_BROWN_LIGHT    (FColor){ 0.82f, 0.41f, 0.41f, 1.0f } // RGB: 210, 105, 105
+#define COLOR_BROWN_DARK     (FColor){ 0.33f, 0.08f, 0.08f, 1.0f } // RGB: 84, 21, 21
+
+// Pink
+#define COLOR_PINK           (FColor){ 1.0f, 0.75f, 0.8f, 1.0f } // RGB: 255, 192, 203
+#define COLOR_PINK_LIGHT     (FColor){ 1.0f, 0.88f, 0.88f, 1.0f } // RGB: 255, 224, 224
+#define COLOR_PINK_DARK      (FColor){ 0.5f, 0.38f, 0.4f, 1.0f } // RGB: 128, 96, 102
+
+// Gold
+#define COLOR_GOLD           (FColor){ 1.0f, 0.84f, 0.0f, 1.0f } // RGB: 255, 215, 0
+#define COLOR_GOLD_LIGHT     (FColor){ 1.0f, 0.92f, 0.5f, 1.0f } // RGB: 255, 234, 128
+#define COLOR_GOLD_DARK      (FColor){ 0.5f, 0.42f, 0.0f, 1.0f } // RGB: 128, 107, 0
+
+// Silver
+#define COLOR_SILVER         (FColor){ 0.75f, 0.75f, 0.75f, 1.0f } // RGB: 192, 192, 192
+#define COLOR_SILVER_LIGHT   (FColor){ 0.88f, 0.88f, 0.88f, 1.0f } // RGB: 224, 224, 224
+#define COLOR_SILVER_DARK    (FColor){ 0.38f, 0.38f, 0.38f, 1.0f } // RGB: 96, 96, 96
+
+// Lime
+#define COLOR_LIME           (FColor){ 0.0f, 1.0f, 0.0f, 1.0f } // RGB: 0, 255, 0
+#define COLOR_LIME_LIGHT     (FColor){ 0.5f, 1.0f, 0.5f, 1.0f } // RGB: 128, 255, 128
+#define COLOR_LIME_DARK      (FColor){ 0.0f, 0.5f, 0.0f, 1.0f } // RGB: 0, 128, 0
+
+// Gray
+#define COLOR_GRAY           (FColor){ 0.5f, 0.5f, 0.5f, 1.0f }
+#define COLOR_GRAY_LIGHT     (FColor){ 0.7f, 0.7f, 0.7f, 1.0f }
+#define COLOR_GRAY_DARK      (FColor){ 0.3f, 0.3f, 0.3f, 1.0f }
+
+// Sky Blue
+#define COLOR_SKY_BLUE       (FColor){ 0.53f, 0.81f, 0.92f, 1.0f }
+#define COLOR_SKY_BLUE_LIGHT (FColor){ 0.73f, 0.91f, 1.0f, 1.0f }
+#define COLOR_SKY_BLUE_DARK  (FColor){ 0.3f, 0.6f, 0.8f, 1.0f  }
+
+// White
+#define COLOR_WHITE          (FColor){ 1.0f, 1.0f, 1.0f, 1.0f }
+#define COLOR_WHITE_LIGHT    (FColor){ 1.0f, 1.0f, 1.0f, 1.0f }
+#define COLOR_WHITE_DARK     (FColor){ 0.8f, 0.8f, 0.8f, 1.0f }
+
+// Chrominum
+#define COLOR_CHROMIUM       (FColor){ 0.8f, 0.8f, 0.8f, 1.0f }
+#define COLOR_CHROMIUM_LIGHT (FColor){ 0.9f, 0.9f, 0.9f, 1.0f }
+#define COLOR_CHROMIUM_DARK  (FColor){ 0.6f, 0.6f, 0.6f, 1.0f }
+
+// Copper
+#define COLOR_COPPER         (FColor){ 0.72f, 0.45f, 0.2f, 1.0f }
+#define COLOR_COPPER_LIGHT   (FColor){ 0.85f, 0.55f, 0.25f, 1.0f }
+#define COLOR_COPPER_DARK    (FColor){ 0.6f, 0.35f, 0.15f, 1.0f }
+
+// Iren
+#define COLOR_IRON           (FColor){ 0.5f, 0.5f, 0.5f, 1.0f }
+#define COLOR_IRON_LIGHT     (FColor){ 0.7f, 0.7f, 0.7f, 1.0f }
+#define COLOR_IRON_DARK      (FColor){ 0.3f, 0.3f, 0.3f, 1.0f }
+
+// Black
+#define COLOR_BLACK          (FColor){ 0.0f, 0.0f, 0.0f, 1.0f }
+#define COLOR_BLACK_LIGHT    (FColor){ 0.2f, 0.2f, 0.2f, 1.0f }
+#define COLOR_BLACK_DARK     (FColor){ 0.0f, 0.0f, 0.0f, 1.0f }
+
+// BLANK
+#define COLOR_BLANK          (FColor){ 0.0f, 0.0f, 0.0f, 0.0f }
+// clang-format on
 
 extern Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...);
