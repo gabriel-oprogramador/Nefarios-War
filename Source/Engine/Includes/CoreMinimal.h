@@ -203,7 +203,7 @@ typedef enum {
 
 // Green
 #define COLOR_GREEN          (FColor){ 0.0f, 1.0f, 0.0f, 1.0f } // RGB: 0, 255, 0
-#define COLOR_GREEN_LIGH     (FColor){ 0.5f, 1.0f, 0.5f, 1.0f } // RGB: 128, 255, 128
+#define COLOR_GREEN_LIGHT    (FColor){ 0.5f, 1.0f, 0.5f, 1.0f } // RGB: 128, 255, 128
 #define COLOR_GREEN_DARK     (FColor){ 0.0f, 0.5f, 0.0f, 1.0f } // RGB: 0, 128, 0
 
 // Blue
