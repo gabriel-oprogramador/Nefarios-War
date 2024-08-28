@@ -286,7 +286,7 @@ typedef enum {
 #define COLOR_COPPER_LIGHT   (FColor){ 0.85f, 0.55f, 0.25f, 1.0f }
 #define COLOR_COPPER_DARK    (FColor){ 0.6f, 0.35f, 0.15f, 1.0f }
 
-// Iren
+// Iron
 #define COLOR_IRON           (FColor){ 0.5f, 0.5f, 0.5f, 1.0f }
 #define COLOR_IRON_LIGHT     (FColor){ 0.7f, 0.7f, 0.7f, 1.0f }
 #define COLOR_IRON_DARK      (FColor){ 0.3f, 0.3f, 0.3f, 1.0f }
