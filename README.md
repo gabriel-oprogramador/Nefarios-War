@@ -1,5 +1,5 @@
 ## Platform Support Status
-![Windows](https://img.shields.io/badge/Windows-NotTested!-yellow) => 
+![Windows](https://img.shields.io/badge/Windows-OK-green) => 
 ![Windows](https://img.shields.io/badge/Win32-Suported-green)
 ![Windows](https://img.shields.io/badge/WGL-Suported-green)
 ![Windows](https://img.shields.io/badge/OpenGL-Suported-green)  
