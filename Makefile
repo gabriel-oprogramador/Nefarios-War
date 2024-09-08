@@ -21,7 +21,7 @@ ifeq ($(USE_CLANG), true)
 define CLANG_GENERATOR_CC
 	echo '[' > $(CLANG_FILE)
 	cat $(OBJ_ENGINE_OUTPUT)/*.o.json >> $(CLANG_FILE)
-	#cat $(OBJ_GAME_OUTPUT)/*.o.json >> $(CLANG_FILE)
+	cat $(OBJ_GAME_OUTPUT)/*.o.json >> $(CLANG_FILE)
 	echo ']' >> $(CLANG_FILE)
 endef
 endif
