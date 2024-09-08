@@ -2,13 +2,11 @@
 #include <windows.h>
 #include <windowsx.h>
 
-#include "Engine.h"
-#include "GL/ApiGL.h"
+#include "GT/Engine.h"
 
 #define CODE_WINDOW_CLOSE WM_USER + 1
 
 extern HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits);
-extern Void ApiGdiSwapBuffer(HDC Device);
 
 static Void* SLibUser32 = NULL;
 
@@ -80,7 +78,7 @@ static struct {
 
 static struct {
   WINDOWPLACEMENT placement;
-  DWORD style;
+  LONG_PTR style;
   HWND window;
   HGLRC context;
   HDC device;
@@ -181,8 +179,8 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
     } break;
 
     case WM_MOUSEMOVE: {
-      float posX = GET_X_LPARAM(lParam);
-      float posY = GET_Y_LPARAM(lParam);
+      Float posX = (Float)GET_X_LPARAM(lParam);
+      Float posY = (Float)GET_Y_LPARAM(lParam);
       GEngine.inputApi.mousePosition[0] = (posX < 0) ? 0.f : posX;
       GEngine.inputApi.mousePosition[1] = (posX < 0) ? 0.f : posY;
     } break;
@@ -205,7 +203,8 @@ Void ApiWin32SetFullscreen(Bool bFullscreen) {
   GEngine.windowApi.bFullscreen = bFullscreen;
 
   if(bFullscreen) {
-    DEVMODE dm = {0};
+    DEVMODE dm;
+    memset(&dm, 0, sizeof(DEVMODE));
     SApiUser32.EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &dm);
     SApiUser32.ChangeDisplaySettingsA(&dm, CDS_FULLSCREEN);
     SApiUser32.GetWindowPlacement(SWindow.window, &SWindow.placement);

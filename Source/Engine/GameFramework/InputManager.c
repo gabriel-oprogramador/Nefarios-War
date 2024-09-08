@@ -1,5 +1,5 @@
 #include "GameFramework.h"
-#include "Engine.h"
+#include "GT/Engine.h"
 
 static EInputMode SInputMode;
 
@@ -69,7 +69,7 @@ Float FInputGetMouseY() {
 }
 
 Void FInputSetCursorPos(FVector2 NewPosition) {
-  CALL_API(GEngine.windowApi.OnWindowSetCursorPos, NULL, NewPosition.x, NewPosition.y);
+  GEngine.windowApi.OnWindowSetCursorPos((UInt32)NewPosition.x, (UInt32)NewPosition.y);
 }
 
 FVector2 FInputGetCursorPos() {
@@ -81,7 +81,7 @@ Bool FInputIsCursorShow() {
 }
 
 Void FInputShowCursor(Bool bShow) {
-  CALL_API(GEngine.windowApi.OnWindowShowCursor, NULL, bShow);
+  GEngine.windowApi.OnWindowShowCursor(bShow);
 }
 
 Bool FInputIsCursorCaptured() {

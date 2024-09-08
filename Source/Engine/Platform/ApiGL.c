@@ -1,17 +1,17 @@
 #include "GL/ApiGL.h"
-#include "Engine.h"
+#include "GT/Engine.h"
 
 #ifdef PLATFORM_WINDOWS
-#include "GL/wgl.h"
+typedef PROC (*FWglGetProcAddress)(LPCSTR);
 static Void* LoadFunction(Void* Lib, String Name) {
-  PFNWGLGETPROCADDRESSPROC wglGetProcAddress = EngineGetFunc(Lib, "wglGetProcAddress");
+  FWglGetProcAddress OnWglGetProcAddress = (FWglGetProcAddress)EngineGetFunc(Lib, "wglGetProcAddress");
   Void* func = EngineGetFunc(Lib, Name);
   if(func == NULL) {
-    func = wglGetProcAddress(Name);
+    func = (Void*)OnWglGetProcAddress(Name);
   }
   return func;
 }
-#endif // PLATFORM_WINDOWS
+#endif  // PLATFORM_WINDOWS
 
 PFNGLCULLFACEPROC glCullFace;
 PFNGLFRONTFACEPROC glFrontFace;
@@ -1288,7 +1288,6 @@ PFNGLVERTEXATTRIBIFORMATNVPROC glVertexAttribIFormatNV;
 PFNGLGETINTEGERUI64I_VNVPROC glGetIntegerui64i_vNV;
 PFNGLVIEWPORTSWIZZLENVPROC glViewportSwizzleNV;
 PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR;
-
 
 Void ApiGLLoadFunctions(Void* LibGL) {
 #ifdef PLATFORM_WINDOWS

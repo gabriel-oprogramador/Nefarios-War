@@ -1,5 +1,5 @@
 #ifdef PLATFORM_WINDOWS
-#include "Engine.h"
+#include "GT/Engine.h"
 #include "GL/glcorearb.h"
 #include "GL/wglext.h"
 
@@ -79,9 +79,9 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
       1,
       PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
       PFD_TYPE_RGBA,
-      DepthBits,
+      (BYTE)DepthBits,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      ColorBits,
+      (BYTE)ColorBits,
       0, 0,
       PFD_MAIN_PLANE,
       0, 0, 0, 0};

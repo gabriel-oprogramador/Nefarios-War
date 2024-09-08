@@ -4,7 +4,7 @@
 ![Windows](https://img.shields.io/badge/WGL-Suported-green)
 ![Windows](https://img.shields.io/badge/OpenGL-Suported-green)  
 
-![Linux](https://img.shields.io/badge/Linux-OK-green) =>
+![Linux](https://img.shields.io/badge/Linux-BROKEN-red) =>
 ![Linux](https://img.shields.io/badge/X11-Suported-green) 
 ![Linux](https://img.shields.io/badge/EGL-Suported-green) 
 ![Linux](https://img.shields.io/badge/OpenGL-Suported-green)  
@@ -25,7 +25,7 @@ You will be in a scenario where each city has to seek its own survival by search
 
 Many years have passed since going into the depths and many technologies have already been lost and many no longer master the surrounding technologies.  
 
-Once you have Nefarium, it is possible to refine it, extracting only the best parts of this ore. With this you obtain the 'Variun' ore and as this it is possible to enrich various types of already existing ores such as Iron, Zinc, Copper and others.  
+Once you have Nefarium, it is possible to refine it, extracting only the best parts of this ore. With this you obtain the 'Varium' ore and as this it is possible to enrich various types of already existing ores such as Iron, Zinc, Copper and others.  
 
 Nefarium is the ore in raw form with which it is possible to manufacture various things, however in this state its greatest capacity is to destroy or degrade other ores, hence its name in Latin.  
 

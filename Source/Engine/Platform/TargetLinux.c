@@ -1,5 +1,5 @@
 #ifdef PLATFORM_LINUX
-#include "Engine.h"
+#include "GT/Engine.h"
 
 #include <dlfcn.h>
 #include <sys/time.h>

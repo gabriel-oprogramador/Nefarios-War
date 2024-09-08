@@ -1,16 +1,18 @@
 #ifdef PLATFORM_WINDOWS
 #include <windows.h>
-#include "Engine.h"
+#include <math.h>
 
-FGT GEngine = {0};
+#include "GT/Engine.h"
+
+FGT GEngine;
 
 extern Bool ApiWin32Init(IWindowApi* WindowApi);
 extern Void ApiGdiSwapBuffer();
 
 static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
-static LARGE_INTEGER STimeFrequency = {0};
 static Double SFrameStartTime = 0;
+static LARGE_INTEGER STimeFrequency;
 
 static struct {
   HANDLE hConsole;
@@ -25,15 +27,19 @@ static Void InitWin32Console() {
   SConsole.defaultAttribute = consoleScreenInfo.wAttributes;
 }
 
-Void EngineInit(Int32 Width, Int32 Height, String Title) {
+Void EngineInitialize(Int32 Width, Int32 Height, String Title) {
   QueryPerformanceFrequency(&STimeFrequency);
-  GEngine.timerApi.engineStartTime = EngineGetTime();
+  GEngine.timerApi.engineStartTime = (Float)EngineGetTime();
   GEngine.windowApi.bShowCursor = true;  // It is necessary to start as true to avoid bugs with WinApi
   InitWin32Console();
   fopen_s(&SLogFile, SLogFilePath, "w");
   if(ApiWin32Init(&GEngine.windowApi)) {
-    CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title)
+    GEngine.windowApi.OnWindowCreate(Width, Height, Title);
   }
+}
+
+Void EngineTerminate() {
+  GEngine.windowApi.OnWindowDestroy();
 }
 
 Bool EngineShouldClose() {
@@ -41,12 +47,12 @@ Bool EngineShouldClose() {
 }
 
 Void EngineShutdown() {
-  CALL_API(GEngine.windowApi.OnWindowDestroy, NULL);
+  GEngine.windowApi.bShouldClose = true;
 }
 
 Void EngineBeginFrame() {
   SFrameStartTime = EngineGetTime();
-  CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
+  GEngine.windowApi.OnWindowUpdate();
 }
 
 Void EngineEndFrame() {
@@ -64,11 +70,11 @@ Void EngineEndFrame() {
   }
 
   GEngine.timerApi.deltaTime = delta;
-  GEngine.timerApi.frameRate = ceil(1.f / delta);
+  GEngine.timerApi.frameRate = (UInt32)ceil(1.f / delta);
 }
 
 Void EngineFullscreen(Bool bFullscreen) {
-  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bFullscreen);
+  GEngine.windowApi.OnWindowFullscreen(bFullscreen);
 }
 
 Double EngineGetTime() {
@@ -82,7 +88,7 @@ Void EngineSetTargetFPS(UInt32 Target) {
 }
 
 Void EngineWait(Double Milliseconds) {
-  Sleep(Milliseconds);
+  Sleep((DWORD)Milliseconds);
 }
 
 // Module
@@ -97,7 +103,7 @@ Void EngineFreeModule(Void* Module) {
 }
 
 Void* EngineGetFunc(Void* Module, String Name) {
-  return GetProcAddress((HMODULE)Module, Name);
+  return (Void*)GetProcAddress((HMODULE)Module, Name);
 }
 
 Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
@@ -134,6 +140,8 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
     LC_RED = 12,
     LC_DARK_RED = 4,
   } color;
+
+  color = LC_WHITE;
 
   switch(logLevel) {
     case LOG_INFO: {

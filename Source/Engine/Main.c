@@ -1,11 +1,5 @@
-#include "Engine.h"
-#include "GameFramework.h"
-
-// Game Entrypoint
-extern Void GameInit();
-extern Void GameStart();
-extern Void GameUpdate(Float DeltaTime);
-extern Void GameStop();
+#include "GT/Engine.h"
+#include "GameModule.h"
 
 // Engine primary systems.
 extern Void FInputUpdate(Float DeltaTime);
@@ -18,12 +12,12 @@ static Float deltaTime = 0.f;
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
-  EngineInit(800, 600, STR(GAME_NAME));
+  EngineInitialize(800, 600, STR(GAME_NAME));
   EngineSetTargetFPS(60);
   GameInit();
 
   while(!EngineShouldClose()) {
-    deltaTime = GEngine.timerApi.deltaTime;
+    deltaTime = (Float)GEngine.timerApi.deltaTime;
     EngineBeginFrame();
     FInputUpdate(deltaTime);
     if(SbInitGamePlay && !SbGameIsRunning) {
@@ -37,7 +31,7 @@ int GTmain(int argc, const char** argv) {
     EngineEndFrame();
   }
   GameStop();
-  EngineShutdown();
+  EngineTerminate();
 
   return 0;
 }
