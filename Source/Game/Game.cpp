@@ -1,17 +1,19 @@
 #include "GameModule.h"
-#include "Level.h"
+#include "Levels/MainMenu.h"
+
+ILevel* SCurrentLevel = NULL;
 
 Void GameInit() {
-  LevelInit();
+  SCurrentLevel = OpenLevel<UMainMenu>();
 }
 
 Void GameStart() {
-  LevelStart();
 }
 
 Void GameUpdate(Float DeltaTime) {
-  LevelUpdate();
+  SCurrentLevel->Tick(DeltaTime);
 }
 
 Void GameStop() {
+  SCurrentLevel->EndPlay();
 }
