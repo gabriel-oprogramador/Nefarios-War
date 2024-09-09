@@ -5,7 +5,7 @@ class UMainMenu : public ILevel{
 public:
   UMainMenu();
   virtual Void BeginPlay();
-  virtual Void Tick(Float DeltTime);
+  virtual Void Tick(Float DeltaTime);
   virtual Void EndPlay();
 private:
   FColor m_colorNormal;
