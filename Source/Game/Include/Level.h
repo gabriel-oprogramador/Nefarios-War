@@ -4,7 +4,7 @@
 class ILevel {
 public:
   virtual Void BeginPlay() = 0;
-  virtual Void Tick(Float DeltTime) = 0;
+  virtual Void Tick(Float DeltaTime) = 0;
   virtual Void EndPlay() = 0;
 };
 
