@@ -1,6 +1,6 @@
 #ifdef PLATFORM_LINUX
 #include "EGL/egl.h"
-#include "Engine.h"
+#include "GT/Engine.h"
 
 typedef EGLNativeWindowType PWindow;
 typedef EGLNativeDisplayType PDisplay;

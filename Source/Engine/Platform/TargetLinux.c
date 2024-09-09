@@ -1,6 +1,7 @@
 #ifdef PLATFORM_LINUX
 #include "GT/Engine.h"
 
+#include <math.h>
 #include <dlfcn.h>
 #include <sys/time.h>
 #include <time.h>
@@ -16,12 +17,20 @@ static FILE* SLogFile = NULL;
 static String SLogFilePath = "LogFile.txt";
 static Double SFrameStartTime = 0;
 
-Void EngineInit(Int32 Width, Int32 Height, String Title) {
+Bool EngineProcess(UInt64 Flags, String* Args){
+  return false;
+}
+
+Void EngineInitialize(Int32 Width, Int32 Height, String Title) {
   GEngine.timerApi.engineStartTime = EngineGetTime();
   SLogFile = fopen(SLogFilePath, "w");
-  if (ApiX11Init(&GEngine.windowApi)) {
-    CALL_API(GEngine.windowApi.OnWindowCreate, NULL, Width, Height, Title);
+  if(ApiX11Init(&GEngine.windowApi)) {
+    GEngine.windowApi.OnWindowCreate(Width, Height, Title);
   }
+}
+
+Void EngineTerminate() {
+  GEngine.windowApi.OnWindowDestroy();
 }
 
 Bool EngineShouldClose() {
@@ -29,12 +38,12 @@ Bool EngineShouldClose() {
 }
 
 Void EngineShutdown() {
-  CALL_API(GEngine.windowApi.OnWindowDestroy, NULL);
+  GEngine.windowApi.bShouldClose = true;
 }
 
 Void EngineBeginFrame() {
   SFrameStartTime = EngineGetTime();
-  CALL_API(GEngine.windowApi.OnWindowUpdate, NULL);
+  GEngine.windowApi.OnWindowUpdate();
 }
 
 Void EngineEndFrame() {
@@ -45,11 +54,11 @@ Void EngineEndFrame() {
   Double target = GEngine.timerApi.frameTime;
   Double remainingTime = target - delta;
 
-  if (target > 0) {
-    if (remainingTime > (delta * 0.9)) {
+  if(target > 0) {
+    if(remainingTime > (delta * 0.9)) {
       EngineWait(remainingTime);
     }
-    while ((delta = EngineGetTime() - SFrameStartTime) < target) {
+    while((delta = EngineGetTime() - SFrameStartTime) < target) {
     }
   }
   GEngine.timerApi.deltaTime = delta;
@@ -57,7 +66,7 @@ Void EngineEndFrame() {
 }
 
 Void EngineFullscreen(Bool bFullscreen) {
-  CALL_API(GEngine.windowApi.OnWindowFullscreen, NULL, bFullscreen);
+  GEngine.windowApi.OnWindowFullscreen(bFullscreen);
 }
 
 Double EngineGetTime() {
@@ -86,7 +95,7 @@ Void* EngineLoadModule(String Name) {
 }
 
 Void EngineFreeModule(Void* Module) {
-  if (Module != NULL) {
+  if(Module != NULL) {
     dlclose(Module);
   }
 }
@@ -100,15 +109,15 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
   Void* function = NULL;
   Int32 index = 0;
 
-  while (**names) {
+  while(**names) {
     function = EngineGetFunc(Module, *names);
-    if (function != NULL) {
+    if(function != NULL) {
       Void* addr = (Char*)Api + index * sizeof(Void*);
       memcpy(addr, &function, sizeof(Void*));
-      if (bDebugMode) {
+      if(bDebugMode) {
         GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }
-    } else if (bDebugMode) {
+    } else if(bDebugMode) {
       GT_LOG(LOG_INFO, "Function Not Loaded:%s", *names);
     }
     names++;
@@ -123,7 +132,7 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
   Bool bIsFast = (Level >> 8);
   UInt16 logLevel = Level & 0xFF;
 
-  switch (logLevel) {
+  switch(logLevel) {
     case LOG_INFO: {
       logColor = (String) "\033[0;97m";
       logTag = (String) "[LOG INFO] =>";
@@ -152,7 +161,7 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
   vprintf(logBuffer, args);
   va_end(args);
 
-  if (SLogFile != NULL && bIsFast != 1) {
+  if(SLogFile != NULL && bIsFast != 1) {
     va_start(args, Format);
     snprintf(logBuffer, sizeof(logBuffer), "%s %s %s\n", logTag, Format, (logLevel == LOG_INFO) ? "" : Context);
     vfprintf(SLogFile, logBuffer, args);
@@ -160,4 +169,4 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
   }
 }
 
-#endif // PLATFORM_LINUX
+#endif  // PLATFORM_LINUX

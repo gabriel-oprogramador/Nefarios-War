@@ -7,10 +7,12 @@ static struct {
   FColor colorNormal;
   FColor colorFullscreen;
   Bool bFullscreen;
+  Bool bControlState;
 } Slevel;
 
 Void LevelInit() {
   Slevel.bFullscreen = false;
+  Slevel.bControlState = true;
   Slevel.colorNormal = COLOR_SKY_BLUE;
   Slevel.colorFullscreen = COLOR_YELLOW;
   glClearColor(FCOLOR_GL(Slevel.colorNormal));
@@ -27,6 +29,13 @@ Void LevelUpdate() {
     EngineFullscreen(Slevel.bFullscreen);
     FColor color = (Slevel.bFullscreen) ? Slevel.colorFullscreen : Slevel.colorNormal;
     glClearColor(FCOLOR_GL(color));
+  }
+
+  if(FInputIsPressed(KEY_F1)){
+    GT_LOGTEMP(LOG_WARNING, "Toogle Input Mode");
+    EInputMode mode = (Slevel.bControlState) ? IM_GAME_ONLY : IM_UI_ONLY;
+    Slevel.bControlState = !Slevel.bControlState;
+    FInputSetMode(mode);
   }
 
   if(FInputIsPressed(KEY_ESCAPE)) {

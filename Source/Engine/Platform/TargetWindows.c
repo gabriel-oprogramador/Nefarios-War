@@ -27,6 +27,10 @@ static Void InitWin32Console() {
   SConsole.defaultAttribute = consoleScreenInfo.wAttributes;
 }
 
+Bool EngineProcess(UInt64 Flags, String* Args) {
+  return false;
+}
+
 Void EngineInitialize(Int32 Width, Int32 Height, String Title) {
   QueryPerformanceFrequency(&STimeFrequency);
   GEngine.timerApi.engineStartTime = (Float)EngineGetTime();

@@ -12,6 +12,7 @@ static Float deltaTime = 0.f;
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
+  EngineProcess(0, argv);
   EngineInitialize(800, 600, STR(GAME_NAME));
   EngineSetTargetFPS(60);
   GameInit();

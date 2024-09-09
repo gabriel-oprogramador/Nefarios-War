@@ -44,6 +44,7 @@ typedef struct {
 
 ENGINE_API FGT GEngine;
 
+ENGINE_API Bool EngineProcess(UInt64 Flags, String* Args);
 ENGINE_API Void EngineInitialize(Int32 Width, Int32 Height, String Title);
 ENGINE_API Void EngineTerminate();
 ENGINE_API Bool EngineShouldClose();

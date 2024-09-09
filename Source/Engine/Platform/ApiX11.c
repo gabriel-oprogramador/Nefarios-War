@@ -1,6 +1,6 @@
 #ifdef PLATFORM_LINUX
 #include "EGL/eglplatform.h"
-#include "Engine.h"
+#include "GT/Engine.h"
 
 #include <X11/X.h>
 #include <X11/XKBlib.h>
@@ -10,7 +10,7 @@
 // To avoid external resets
 #ifdef Bool
 #undef Bool
-#endif // Bool
+#endif  // Bool
 
 typedef EGLNativeWindowType PWindow;
 typedef EGLNativeDisplayType PDisplay;
@@ -19,35 +19,35 @@ extern Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Mino
 
 static Void* SLibX11 = NULL;
 static String SApiX11Name[] = {
-    "XWarpPointer",               //
-    "XUndefineCursor",            //
-    "XDisplayKeycodes",           //
-    "XGetKeyboardMapping",        //
-    "XFree",                      //
-    "XCreateBitmapFromData",      //
-    "XCreatePixmapCursor",        //
-    "XFreePixmap",                //
-    "XCreateFontCursor",          //
-    "XDefineCursor",              //
-    "XFreeCursor",                //
-    "XkbSetDetectableAutoRepeat", //
-    "XInternAtom",                //
-    "XSetWMProtocols",            //
-    "XStoreName",                 //
-    "XOpenDisplay",               //
-    "XCloseDisplay",              //
-    "XMapWindow",                 //
-    "XUnmapWindow",               //
-    "XSelectInput",               //
-    "XNextEvent",                 //
-    "XSendEvent",                 //
-    "XPending",                   //
-    "XSetWMNormalHints",          //
-    "XAllocSizeHints",            //
-    "XLookupKeysym",              //
-    "XDestroyWindow",             //
-    "XCreateSimpleWindow",        //
-    "\0"                          //
+    "XWarpPointer",                //
+    "XUndefineCursor",             //
+    "XDisplayKeycodes",            //
+    "XGetKeyboardMapping",         //
+    "XFree",                       //
+    "XCreateBitmapFromData",       //
+    "XCreatePixmapCursor",         //
+    "XFreePixmap",                 //
+    "XCreateFontCursor",           //
+    "XDefineCursor",               //
+    "XFreeCursor",                 //
+    "XkbSetDetectableAutoRepeat",  //
+    "XInternAtom",                 //
+    "XSetWMProtocols",             //
+    "XStoreName",                  //
+    "XOpenDisplay",                //
+    "XCloseDisplay",               //
+    "XMapWindow",                  //
+    "XUnmapWindow",                //
+    "XSelectInput",                //
+    "XNextEvent",                  //
+    "XSendEvent",                  //
+    "XPending",                    //
+    "XSetWMNormalHints",           //
+    "XAllocSizeHints",             //
+    "XLookupKeysym",               //
+    "XDestroyWindow",              //
+    "XCreateSimpleWindow",         //
+    "\0"                           //
 };
 
 static struct {
@@ -137,20 +137,20 @@ Void ApiX11WindowCreate(Int32 Width, Int32 Height, String Title) {
   SWindow.window = win;
   InternalGetKeybordMapping();
   GT_LOG(LOG_INFO, "API:X11 Created Window => Width:%d Height:%d Title:%s", Width, Height, Title);
-  ApiEGLInit(SWindow.window, SWindow.display, 3, 3, 8, 24); // ColorBits R:8 G:8 B:8 A:8
+  ApiEGLInit(SWindow.window, SWindow.display, 3, 3, 8, 24);  // ColorBits R:8 G:8 B:8 A:8
 }
 
 Void ApiX11WindowUpdate() {
 #ifdef DEBUG_MODE
   InternalUpdateWindowTitle();
-#endif // DEBUG_MODE
+#endif  // DEBUG_MODE
 
   XEvent event;
   memcpy(GEngine.inputApi.previousKeys, GEngine.inputApi.currentKeys, sizeof(GEngine.inputApi.previousKeys));
 
-  while (SApiX11.XPending(SWindow.display)) {
+  while(SApiX11.XPending(SWindow.display)) {
     SApiX11.XNextEvent(SWindow.display, &event);
-    switch (event.type) {
+    switch(event.type) {
       case KeyPress: {
         InternalUpdateKey(event.xkey.keycode, false, true);
       } break;
@@ -169,7 +169,7 @@ Void ApiX11WindowUpdate() {
         // TODO:Update The Renderer Viewport.
       } break;
       case MotionNotify: {
-        if (event.xmotion.window == SWindow.window) {
+        if(event.xmotion.window == SWindow.window) {
           Float posX = event.xmotion.x;
           Float posY = event.xmotion.y;
           posX = (posX > GEngine.windowApi.width) ? GEngine.windowApi.width : posX;
@@ -179,8 +179,8 @@ Void ApiX11WindowUpdate() {
         }
       } break;
       case ClientMessage: {
-        if (event.xclient.message_type == SWindow.wmProtocols) {
-          if (event.xclient.data.l[0] == (Int32)SWindow.wmDeleteWindow) {
+        if(event.xclient.message_type == SWindow.wmProtocols) {
+          if(event.xclient.data.l[0] == (Int32)SWindow.wmDeleteWindow) {
             GEngine.windowApi.bShouldClose = true;
           }
         }
@@ -218,7 +218,7 @@ Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
 Void ApiX11WindowShowCursor(Bool bShow) {
   GEngine.windowApi.bShowCursor = bShow;
 
-  if (bShow) {
+  if(bShow) {
     SApiX11.XUndefineCursor(SWindow.display, SWindow.window);
   } else {
     Pixmap noData;
@@ -253,7 +253,7 @@ static Void InternalGetKeybordMapping() {
 
 static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
   KeySym keySym = 0;
-  if (bIsButton) {
+  if(bIsButton) {
     keySym = Code;
   } else {
     Int32 index = (Code - SKeysMapping.keyCodeMin) * SKeysMapping.keySymPerkeyCode;
@@ -262,120 +262,120 @@ static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
   }
 
   static UInt16 keySymCode[] = {
-      XK_apostrophe,      // Key: '
-      XK_comma,           // Key: ,
-      XK_minus,           // Key: -
-      XK_period,          // Key: .
-      XK_slash,           // Key: /
-      XK_0,               // Key: 0
-      XK_1,               // Key: 1
-      XK_2,               // Key: 2
-      XK_3,               // Key: 3
-      XK_4,               // Key: 4
-      XK_5,               // Key: 5
-      XK_6,               // Key: 6
-      XK_7,               // Key: 7
-      XK_8,               // Key: 8
-      XK_9,               // Key: 9
-      XK_semicolon,       // Key: ;
-      XK_equal,           // Key: =
-      XK_A,               // Key: A
-      XK_B,               // Key: B
-      XK_C,               // Key: C
-      XK_D,               // Key: D
-      XK_E,               // Key: E
-      XK_F,               // Key: F
-      XK_G,               // Key: G
-      XK_H,               // Key: H
-      XK_I,               // Key: I
-      XK_J,               // Key: J
-      XK_K,               // Key: K
-      XK_L,               // Key: L
-      XK_M,               // Key: M
-      XK_N,               // Key: N
-      XK_O,               // Key: O
-      XK_P,               // Key: P
-      XK_Q,               // Key: Q
-      XK_R,               // Key: R
-      XK_S,               // Key: S
-      XK_T,               // Key: T
-      XK_U,               // Key: U
-      XK_V,               // Key: V
-      XK_W,               // Key: W
-      XK_X,               // Key: X
-      XK_Y,               // Key: Y
-      XK_Z,               // Key: Z
-      XK_bracketleft,     // Key: [{
-      XK_backslash,       // Key: '\'
-      XK_bracketright,    // Key: ]}
-      XK_grave,           // Key: `
-      XK_space,           // Key: Space
-      XK_Escape,          // Key: Escape
-      XK_Return,          // Key: Enter
-      XK_Tab,             // Key: Tab
-      XK_BackSpace,       // Key: Backspace
-      XK_Insert,          // Key: Insert
-      XK_Delete,          // Key: Delete
-      XK_Right,           // Key: Right
-      XK_Left,            // Key: Left
-      XK_Down,            // Key: Down
-      XK_Up,              // Key: Up
-      XK_Page_Down,       // Key: Page Down
-      XK_Page_Up,         // Key: Page Up
-      XK_Home,            // Key: Home
-      XK_End,             // Key: End
-      XK_Caps_Lock,       // Key: Caps Lock
-      XK_Scroll_Lock,     // Key: Scroll Lock
-      XK_Num_Lock,        // Key: Num Lock
-      XK_Print,           // Key: Print
-      XK_Pause,           // Key: Pause
-      XK_F1,              // Key: F1
-      XK_F2,              // Key: F2
-      XK_F3,              // Key: F3
-      XK_F4,              // Key: F4
-      XK_F5,              // Key: F5
-      XK_F6,              // Key: F6
-      XK_F7,              // Key: F7
-      XK_F8,              // Key: F8
-      XK_F9,              // Key: F9
-      XK_F10,             // Key: F10
-      XK_F11,             // Key: F11
-      XK_F12,             // Key: F12
-      XK_Shift_L,         // Key: Left Shift
-      XK_Control_L,       // Key: Left Control
-      XK_Alt_L,           // Key: Left Alt
-      XK_Super_L,         // Key: Left Super
-      XK_Shift_R,         // Key: Right Shift
-      XK_Control_R,       // Key: Right Control
-      XK_Alt_R,           // Key: Right Alt
-      XK_Super_R,         // Key: Right Super
-      XK_Menu,            // Key: Menu
-      XK_KP_0,            // Key: 0
-      XK_KP_1,            // Key: 1
-      XK_KP_2,            // Key: 2
-      XK_KP_3,            // Key: 3
-      XK_KP_4,            // Key: 4
-      XK_KP_5,            // Key: 5
-      XK_KP_6,            // Key: 6
-      XK_KP_7,            // Key: 7
-      XK_KP_8,            // Key: 8
-      XK_KP_9,            // Key: 9
-      XK_KP_Decimal,      // Key: Decimal
-      XK_KP_Divide,       // Key: Divide
-      XK_KP_Multiply,     // Key: Multiply
-      XK_KP_Subtract,     // Key: Subtract
-      XK_KP_Add,          // Key: Add
-      XK_KP_Enter,        // Key: Enter
-      XK_KP_Equal,        // Key: Equal
-      MOUSE_LEFT_CODE,    // Mouse Left
-      MOUSE_MIDDLE_CODE,  // Mouse Middle
-      MOUSE_RIGHT_CODE,   // Mouse Right
-      MOUSE_FORWARD_CODE, // Mouse Forward
-      MOUSE_BACKWARD_CODE // Mouse Backward
+      XK_apostrophe,       // Key: '
+      XK_comma,            // Key: ,
+      XK_minus,            // Key: -
+      XK_period,           // Key: .
+      XK_slash,            // Key: /
+      XK_0,                // Key: 0
+      XK_1,                // Key: 1
+      XK_2,                // Key: 2
+      XK_3,                // Key: 3
+      XK_4,                // Key: 4
+      XK_5,                // Key: 5
+      XK_6,                // Key: 6
+      XK_7,                // Key: 7
+      XK_8,                // Key: 8
+      XK_9,                // Key: 9
+      XK_semicolon,        // Key: ;
+      XK_equal,            // Key: =
+      XK_A,                // Key: A
+      XK_B,                // Key: B
+      XK_C,                // Key: C
+      XK_D,                // Key: D
+      XK_E,                // Key: E
+      XK_F,                // Key: F
+      XK_G,                // Key: G
+      XK_H,                // Key: H
+      XK_I,                // Key: I
+      XK_J,                // Key: J
+      XK_K,                // Key: K
+      XK_L,                // Key: L
+      XK_M,                // Key: M
+      XK_N,                // Key: N
+      XK_O,                // Key: O
+      XK_P,                // Key: P
+      XK_Q,                // Key: Q
+      XK_R,                // Key: R
+      XK_S,                // Key: S
+      XK_T,                // Key: T
+      XK_U,                // Key: U
+      XK_V,                // Key: V
+      XK_W,                // Key: W
+      XK_X,                // Key: X
+      XK_Y,                // Key: Y
+      XK_Z,                // Key: Z
+      XK_bracketleft,      // Key: [{
+      XK_backslash,        // Key: '\'
+      XK_bracketright,     // Key: ]}
+      XK_grave,            // Key: `
+      XK_space,            // Key: Space
+      XK_Escape,           // Key: Escape
+      XK_Return,           // Key: Enter
+      XK_Tab,              // Key: Tab
+      XK_BackSpace,        // Key: Backspace
+      XK_Insert,           // Key: Insert
+      XK_Delete,           // Key: Delete
+      XK_Right,            // Key: Right
+      XK_Left,             // Key: Left
+      XK_Down,             // Key: Down
+      XK_Up,               // Key: Up
+      XK_Page_Down,        // Key: Page Down
+      XK_Page_Up,          // Key: Page Up
+      XK_Home,             // Key: Home
+      XK_End,              // Key: End
+      XK_Caps_Lock,        // Key: Caps Lock
+      XK_Scroll_Lock,      // Key: Scroll Lock
+      XK_Num_Lock,         // Key: Num Lock
+      XK_Print,            // Key: Print
+      XK_Pause,            // Key: Pause
+      XK_F1,               // Key: F1
+      XK_F2,               // Key: F2
+      XK_F3,               // Key: F3
+      XK_F4,               // Key: F4
+      XK_F5,               // Key: F5
+      XK_F6,               // Key: F6
+      XK_F7,               // Key: F7
+      XK_F8,               // Key: F8
+      XK_F9,               // Key: F9
+      XK_F10,              // Key: F10
+      XK_F11,              // Key: F11
+      XK_F12,              // Key: F12
+      XK_Shift_L,          // Key: Left Shift
+      XK_Control_L,        // Key: Left Control
+      XK_Alt_L,            // Key: Left Alt
+      XK_Super_L,          // Key: Left Super
+      XK_Shift_R,          // Key: Right Shift
+      XK_Control_R,        // Key: Right Control
+      XK_Alt_R,            // Key: Right Alt
+      XK_Super_R,          // Key: Right Super
+      XK_Menu,             // Key: Menu
+      XK_KP_0,             // Key: 0
+      XK_KP_1,             // Key: 1
+      XK_KP_2,             // Key: 2
+      XK_KP_3,             // Key: 3
+      XK_KP_4,             // Key: 4
+      XK_KP_5,             // Key: 5
+      XK_KP_6,             // Key: 6
+      XK_KP_7,             // Key: 7
+      XK_KP_8,             // Key: 8
+      XK_KP_9,             // Key: 9
+      XK_KP_Decimal,       // Key: Decimal
+      XK_KP_Divide,        // Key: Divide
+      XK_KP_Multiply,      // Key: Multiply
+      XK_KP_Subtract,      // Key: Subtract
+      XK_KP_Add,           // Key: Add
+      XK_KP_Enter,         // Key: Enter
+      XK_KP_Equal,         // Key: Equal
+      MOUSE_LEFT_CODE,     // Mouse Left
+      MOUSE_MIDDLE_CODE,   // Mouse Middle
+      MOUSE_RIGHT_CODE,    // Mouse Right
+      MOUSE_FORWARD_CODE,  // Mouse Forward
+      MOUSE_BACKWARD_CODE  // Mouse Backward
   };
 
-  for (Int32 c = 0; c < KEY_MAX; c++) {
-    if (keySymCode[c] == keySym) {
+  for(Int32 c = 0; c < KEY_MAX; c++) {
+    if(keySymCode[c] == keySym) {
       GEngine.inputApi.currentKeys[c] = bIsPressed;
       return;
     }
@@ -384,7 +384,7 @@ static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
 
 Bool ApiX11Init(IWindowApi* WindowApi) {
   SLibX11 = EngineLoadModule("libX11.so");
-  if (SLibX11 == NULL) {
+  if(SLibX11 == NULL) {
     return false;
   }
   EngineLoadApi(SLibX11, &SApiX11, SApiX11Name, false);
@@ -397,4 +397,4 @@ Bool ApiX11Init(IWindowApi* WindowApi) {
   GT_LOG(LOG_INFO, "API:X11 Initialized");
   return true;
 }
-#endif // PLATFORM_LINUX
+#endif  // PLATFORM_LINUX
