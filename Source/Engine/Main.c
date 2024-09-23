@@ -12,14 +12,14 @@ static float deltaTime = 0.f;
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
-  EngineProcess(0, argv);
-  EngineInitialize(800, 600, STR(GAME_NAME));
-  EngineSetTargetFPS(60);
+  PEngineProcess(0, argv);
+  PEngineInitialize(800, 600, STR(GAME_NAME));
+  PEngineSetTargetFPS(60);
   GameInit();
 
-  while(!EngineShouldClose()) {
+  while(!PEngineShouldClose()) {
     deltaTime = (float)GEngine.timerApi.deltaTime;
-    EngineBeginFrame();
+    PEngineBeginFrame();
     FInputUpdate(deltaTime);
     if(SbInitGamePlay && !SbGameIsRunning) {
       SbGameIsRunning = true;
@@ -29,10 +29,10 @@ int GTmain(int argc, const char** argv) {
       FTimerUpdate(deltaTime);
       GameUpdate(deltaTime);
     }
-    EngineEndFrame();
+    PEngineEndFrame();
   }
   GameStop();
-  EngineTerminate();
+  PEngineTerminate();
 
   return 0;
 }

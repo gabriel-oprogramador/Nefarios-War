@@ -5,12 +5,12 @@
 typedef EGLNativeWindowType PWindow;
 typedef EGLNativeDisplayType PDisplay;
 
-extern Void ApiGLLoadFunctions(Void* LibGL);
+extern void ApiGLLoadFunctions(void* LibGL);
 
-static Void* SLibEGL = NULL;
-static Void* SLibGL = NULL;
+static void* SLibEGL = NULL;
+static void* SLibGL = NULL;
 
-static String SLibEGLNames[] = {
+static cstring SLibEGLNames[] = {
     "eglGetDisplay",          //
     "eglInitialize",          //
     "eglBindAPI",             //
@@ -40,18 +40,18 @@ static struct {
   EGLContext* context;
 } SEglInfo;
 
-Void ApiEGLSwapBuffer(){
+void ApiEGLSwapBuffer(){
   SApiEGL.eglSwapBuffers(SEglInfo.display, SEglInfo.surface);
 }
 
-Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits) {
-  SLibEGL = EngineLoadModule("libEGL.so");
+void ApiEGLInit(PWindow Window, PDisplay Display, int32 Major, int32 Minor, int32 ColorBits, int32 DepthBits) {
+  SLibEGL = PModuleLoad("libEGL.so");
   if (SLibEGL == NULL) {
     GT_LOG(LOG_FATAL, "API:EGL Not Loaded");
     return;
   }
 
-  EngineLoadApi(SLibEGL, &SApiEGL, SLibEGLNames, false);
+  PModuleLoadApi(SLibEGL, &SApiEGL, SLibEGLNames, false);
   GT_LOG(LOG_INFO, "API:EGL Initialized");
 
   PWindow win = Window;
@@ -59,8 +59,8 @@ Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Minor, Int3
   EGLConfig config;
   EGLSurface* surface;
   EGLContext* context;
-  Int32 eglMajor;
-  Int32 eglMinor;
+  int32 eglMajor;
+  int32 eglMinor;
 
   if (!SApiEGL.eglInitialize(dpy, &eglMajor, &eglMinor)) {
     GT_LOG(LOG_FATAL, "API:EGL UInitialized");
@@ -124,7 +124,7 @@ Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Minor, Int3
 
   GT_LOG(LOG_INFO, "API:EGL Created OpenGL Context => Core Profile:%d.%d", Major, Minor);
 
-  SLibGL = EngineLoadModule("libGL.so");
+  SLibGL = PModuleLoad("libGL.so");
   ApiGLLoadFunctions(SLibGL);
 }
 

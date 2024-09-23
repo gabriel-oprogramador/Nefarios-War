@@ -26,13 +26,26 @@ typedef struct {
   float x;
   float y;
   float z;
-} FVector;
+} FVector3;
+
+typedef struct {
+  float x;
+  float y;
+  float z;
+  float w;
+} FVector4;
+
+typedef FVector4 FQuat;
 
 typedef struct {
   float pitch;
   float yaw;
   float roll;
 } FRotator;
+
+typedef struct{
+  float e[4][4];
+} FMat4;
 
 typedef enum {
   IM_GAME_ONLY,

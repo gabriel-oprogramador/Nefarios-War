@@ -31,7 +31,7 @@ ENGINE_API void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format,
 #define BUFFER_SMALL                   256
 #define BUFFER_LOG_SIZE                2048
 #define GT_LOG(Level, Format, ...)     EnginePrintLog(Level, CONTEXT_LOG, Format, ##__VA_ARGS__)
-#define GT_LOGTEMP(Level, Format, ...) EnginePrintLog((ELogLevel)((1 << 8) | Level), CONTEXT_LOG, Format, ##__VA_ARGS__)
+#define GT_LOGTEMP(Level, Format, ...) EnginePrintLog((ELogLevel)((1 << 16) | Level), CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define FCOLOR_GL(FCOLOR)              FCOLOR.r, FCOLOR.g, FCOLOR.b, FCOLOR.a
 
 #if defined(__cplusplus)

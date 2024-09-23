@@ -7,18 +7,13 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-// To avoid external resets
-#ifdef Bool
-#undef Bool
-#endif  // Bool
-
 typedef EGLNativeWindowType PWindow;
 typedef EGLNativeDisplayType PDisplay;
 
-extern Void ApiEGLInit(PWindow Window, PDisplay Display, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits);
+extern void ApiEGLInit(PWindow Window, PDisplay Display, int32 Major, int32 Minor, int32 ColorBits, int32 DepthBits);
 
-static Void* SLibX11 = NULL;
-static String SApiX11Name[] = {
+static void* SLibX11 = NULL;
+static cstring SApiX11Name[] = {
     "XWarpPointer",                //
     "XUndefineCursor",             //
     "XDisplayKeycodes",            //
@@ -91,26 +86,26 @@ static struct {
 
 static struct {
   KeySym* map;
-  Int32 keyCodeMin;
-  Int32 keyCodeMax;
-  Int32 keyCodeCount;
-  Int32 keySymPerkeyCode;
+  int32 keyCodeMin;
+  int32 keyCodeMax;
+  int32 keyCodeCount;
+  int32 keySymPerkeyCode;
 } SKeysMapping;
 
-static Void InternalUpdateWindowTitle();
-static Void InternalGetKeybordMapping();
-static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed);
+static void InternalUpdateWindowTitle();
+static void InternalGetKeybordMapping();
+static void InternalUpdateKey(KeyCode Code, bool bIsButton, bool bIsPressed);
 
-Void ApiX11WindowCreate(Int32 Width, Int32 Height, String Title) {
-  Int32 keyMask = KeyPressMask | KeyReleaseMask;
-  Int32 buttonMask = ButtonPressMask | ButtonReleaseMask;
-  Int32 otherMask = StructureNotifyMask | PointerMotionMask;
-  Int32 mask = keyMask | buttonMask | otherMask;
+void ApiX11WindowCreate(int32 Width, int32 Height, cstring Title) {
+  int32 keyMask = KeyPressMask | KeyReleaseMask;
+  int32 buttonMask = ButtonPressMask | ButtonReleaseMask;
+  int32 otherMask = StructureNotifyMask | PointerMotionMask;
+  int32 mask = keyMask | buttonMask | otherMask;
 
   Display* dpy = SApiX11.XOpenDisplay(NULL);
-  Int32 screen = DefaultScreen(dpy);
-  UInt32 blackPixel = BlackPixel(dpy, screen);
-  UInt32 whitePixe = WhitePixel(dpy, screen);
+  int32 screen = DefaultScreen(dpy);
+  uint32 blackPixel = BlackPixel(dpy, screen);
+  uint32 whitePixe = WhitePixel(dpy, screen);
   Window win = SApiX11.XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0, Width, Height, 1, blackPixel, whitePixe);
   SApiX11.XMapWindow(dpy, win);
   SApiX11.XSelectInput(dpy, win, mask);
@@ -140,7 +135,7 @@ Void ApiX11WindowCreate(Int32 Width, Int32 Height, String Title) {
   ApiEGLInit(SWindow.window, SWindow.display, 3, 3, 8, 24);  // ColorBits R:8 G:8 B:8 A:8
 }
 
-Void ApiX11WindowUpdate() {
+void ApiX11WindowUpdate() {
 #ifdef DEBUG_MODE
   InternalUpdateWindowTitle();
 #endif  // DEBUG_MODE
@@ -170,8 +165,8 @@ Void ApiX11WindowUpdate() {
       } break;
       case MotionNotify: {
         if(event.xmotion.window == SWindow.window) {
-          Float posX = event.xmotion.x;
-          Float posY = event.xmotion.y;
+          float posX = event.xmotion.x;
+          float posY = event.xmotion.y;
           posX = (posX > GEngine.windowApi.width) ? GEngine.windowApi.width : posX;
           posY = (posY > GEngine.windowApi.width) ? GEngine.windowApi.height : posY;
           GEngine.inputApi.mousePosition[0] = posX;
@@ -180,7 +175,7 @@ Void ApiX11WindowUpdate() {
       } break;
       case ClientMessage: {
         if(event.xclient.message_type == SWindow.wmProtocols) {
-          if(event.xclient.data.l[0] == (Int32)SWindow.wmDeleteWindow) {
+          if(event.xclient.data.l[0] == (int32)SWindow.wmDeleteWindow) {
             GEngine.windowApi.bShouldClose = true;
           }
         }
@@ -189,7 +184,7 @@ Void ApiX11WindowUpdate() {
   }
 }
 
-Void ApiX11WindowDestroy() {
+void ApiX11WindowDestroy() {
   GEngine.windowApi.bShouldClose = true;
   SApiX11.XUnmapWindow(SWindow.display, SWindow.window);
   SApiX11.XDestroyWindow(SWindow.display, SWindow.window);
@@ -197,7 +192,7 @@ Void ApiX11WindowDestroy() {
   GT_LOG(LOG_INFO, "API:X11 Closed Window");
 }
 
-Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
+void ApiX11WindowFullscreen(bool bIsFullscreen) {
   XEvent event;
   GEngine.windowApi.bFullscreen = !GEngine.windowApi.bFullscreen;
   SWindow.sizeHint->flags = (bIsFullscreen) ? 0 : PMinSize | PMaxSize;
@@ -215,7 +210,7 @@ Void ApiX11WindowFullscreen(Bool bIsFullscreen) {
   SApiX11.XSendEvent(SWindow.display, DefaultRootWindow(SWindow.display), false, StructureNotifyMask, &event);
 }
 
-Void ApiX11WindowShowCursor(Bool bShow) {
+void ApiX11WindowShowCursor(bool bShow) {
   GEngine.windowApi.bShowCursor = bShow;
 
   if(bShow) {
@@ -224,7 +219,7 @@ Void ApiX11WindowShowCursor(Bool bShow) {
     Pixmap noData;
     Cursor invisibleCursor;
     XColor black;
-    static Char noDataBits[] = {0};
+    static char noDataBits[] = {0};
     noData = SApiX11.XCreateBitmapFromData(SWindow.display, SWindow.window, noDataBits, 1, 1);
     black.red = black.green = black.blue = 0;
     invisibleCursor = SApiX11.XCreatePixmapCursor(SWindow.display, noData, noData, &black, &black, 0, 0);
@@ -232,36 +227,36 @@ Void ApiX11WindowShowCursor(Bool bShow) {
   }
 }
 
-Void ApiX11SetCursorPos(UInt32 X, UInt32 Y) {
+void ApiX11SetCursorPos(uint32 X, uint32 Y) {
   SApiX11.XWarpPointer(SWindow.display, None, SWindow.window, 0, 0, 0, 0, X, Y);
 }
 
-static Void InternalUpdateWindowTitle() {
-  Char buffer[BUFFER_SMALL] = "";
-  String title = GEngine.windowApi.title;
-  Double deltaTime = GEngine.timerApi.deltaTime;
-  UInt32 frameRate = GEngine.timerApi.frameRate;
+static void InternalUpdateWindowTitle() {
+  char buffer[BUFFER_SMALL] = "";
+  cstring title = GEngine.windowApi.title;
+  double deltaTime = GEngine.timerApi.deltaTime;
+  uint32 frameRate = GEngine.timerApi.frameRate;
   snprintf(buffer, BUFFER_SMALL, "%s (Debug Mode) => FPS:%u | MS:%f", title, frameRate, deltaTime);
   SApiX11.XStoreName(SWindow.display, SWindow.window, buffer);
 }
 
-static Void InternalGetKeybordMapping() {
+static void InternalGetKeybordMapping() {
   SApiX11.XDisplayKeycodes(SWindow.display, &SKeysMapping.keyCodeMin, &SKeysMapping.keyCodeMax);
   SKeysMapping.keyCodeCount = SKeysMapping.keyCodeMax - SKeysMapping.keyCodeMin + 1;
   SKeysMapping.map = SApiX11.XGetKeyboardMapping(SWindow.display, SKeysMapping.keyCodeMin, SKeysMapping.keyCodeCount, &SKeysMapping.keySymPerkeyCode);
 }
 
-static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
+static void InternalUpdateKey(KeyCode Code, bool bIsButton, bool bIsPressed) {
   KeySym keySym = 0;
   if(bIsButton) {
     keySym = Code;
   } else {
-    Int32 index = (Code - SKeysMapping.keyCodeMin) * SKeysMapping.keySymPerkeyCode;
+    int32 index = (Code - SKeysMapping.keyCodeMin) * SKeysMapping.keySymPerkeyCode;
     keySym = SKeysMapping.map[index];
     keySym = (keySym >= XK_a && keySym <= XK_z) ? keySym - (XK_a - XK_A) : keySym;
   }
 
-  static UInt16 keySymCode[] = {
+  static uint16 keySymCode[] = {
       XK_apostrophe,       // Key: '
       XK_comma,            // Key: ,
       XK_minus,            // Key: -
@@ -374,7 +369,7 @@ static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
       MOUSE_BACKWARD_CODE  // Mouse Backward
   };
 
-  for(Int32 c = 0; c < KEY_MAX; c++) {
+  for(int32 c = 0; c < KEY_MAX; c++) {
     if(keySymCode[c] == keySym) {
       GEngine.inputApi.currentKeys[c] = bIsPressed;
       return;
@@ -382,12 +377,12 @@ static Void InternalUpdateKey(KeyCode Code, Bool bIsButton, Bool bIsPressed) {
   }
 }
 
-Bool ApiX11Init(IWindowApi* WindowApi) {
-  SLibX11 = EngineLoadModule("libX11.so");
+bool ApiX11Init(IWindowApi* WindowApi) {
+  SLibX11 = PModuleLoad("libX11.so");
   if(SLibX11 == NULL) {
     return false;
   }
-  EngineLoadApi(SLibX11, &SApiX11, SApiX11Name, false);
+  PModuleLoadApi(SLibX11, &SApiX11, SApiX11Name, false);
   WindowApi->OnWindowCreate = &ApiX11WindowCreate;
   WindowApi->OnWindowUpdate = &ApiX11WindowUpdate;
   WindowApi->OnWindowDestroy = &ApiX11WindowDestroy;

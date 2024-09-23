@@ -1293,7 +1293,7 @@ void ApiGLLoadFunctions(void* LibGL) {
 #ifdef PLATFORM_WINDOWS
 #define GLAPI_GETPROC(Name) LoadFunction(LibGL, #Name)
 #elif PLATFORM_LINUX
-#define GLAPI_GETPROC(Name) EngineGetFunc(LibGL, #Name)
+#define GLAPI_GETPROC(Name) PModuleGetFunc(LibGL, #Name)
 #endif  // PLATFORM_WINDOWS
 
   glCullFace = (PFNGLCULLFACEPROC)GLAPI_GETPROC(glCullFace);

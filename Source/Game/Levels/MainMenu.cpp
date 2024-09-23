@@ -12,25 +12,24 @@ UMainMenu::UMainMenu() {
 }
 
 void UMainMenu::BeginPlay() {
-  
 }
 
 void UMainMenu::Tick(float DeltTime) {
-  if(FInputIsPressed(KEY_TAB)){
+  if(FInputIsPressed(KEY_TAB)) {
     this->m_bFullscreen = !this->m_bFullscreen;
-    EngineFullscreen(this->m_bFullscreen);
+    PEngineFullscreen(this->m_bFullscreen);
     FColor color = (this->m_bFullscreen) ? this->m_colorFullscreen : this->m_colorNormal;
     glClearColor(FCOLOR_GL(color));
   }
 
-  if(FInputIsPressed(KEY_F1)){
+  if(FInputIsPressed(KEY_F1)) {
     this->m_bGameMode = !this->m_bGameMode;
     EInputMode mode = (this->m_bGameMode) ? IM_GAME_ONLY : IM_UI_ONLY;
     FInputSetMode(mode);
   }
 
-  if(FInputIsPressed(KEY_ESCAPE)){
-    EngineShutdown();
+  if(FInputIsPressed(KEY_ESCAPE)) {
+    PEngineShutdown();
   }
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

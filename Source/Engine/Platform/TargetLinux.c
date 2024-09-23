@@ -10,79 +10,79 @@
 
 FGT GEngine = {0};
 
-extern Bool ApiX11Init(IWindowApi* WindowApi);
-extern Void ApiEGLSwapBuffer();
+extern bool ApiX11Init(IWindowApi* WindowApi);
+extern void ApiEGLSwapBuffer();
 
 static FILE* SLogFile = NULL;
-static String SLogFilePath = "LogFile.txt";
-static Double SFrameStartTime = 0;
+static cstring SLogFilePath = "LogFile.txt";
+static double SFrameStartTime = 0;
 
-Bool EngineProcess(UInt64 Flags, String* Args){
+bool PEngineProcess(uint64 Flags, cstring* Args) {
   return false;
 }
 
-Void EngineInitialize(Int32 Width, Int32 Height, String Title) {
-  GEngine.timerApi.engineStartTime = EngineGetTime();
+void PEngineInitialize(int32 Width, int32 Height, cstring Title) {
+  GEngine.timerApi.engineStartTime = PEngineGetTime();
   SLogFile = fopen(SLogFilePath, "w");
   if(ApiX11Init(&GEngine.windowApi)) {
     GEngine.windowApi.OnWindowCreate(Width, Height, Title);
   }
 }
 
-Void EngineTerminate() {
+void PEngineTerminate() {
   GEngine.windowApi.OnWindowDestroy();
 }
 
-Bool EngineShouldClose() {
+bool PEngineShouldClose() {
   return GEngine.windowApi.bShouldClose;
 }
 
-Void EngineShutdown() {
+void PEngineShutdown() {
   GEngine.windowApi.bShouldClose = true;
 }
 
-Void EngineBeginFrame() {
-  SFrameStartTime = EngineGetTime();
+void PEngineBeginFrame() {
+  SFrameStartTime = PEngineGetTime();
   GEngine.windowApi.OnWindowUpdate();
 }
 
-Void EngineEndFrame() {
+void PEngineEndFrame() {
   ApiEGLSwapBuffer();
 
-  Double end = EngineGetTime();
-  Double delta = end - SFrameStartTime;
-  Double target = GEngine.timerApi.frameTime;
-  Double remainingTime = target - delta;
+  double end = PEngineGetTime();
+  double delta = end - SFrameStartTime;
+  double target = GEngine.timerApi.frameTime;
+  double remainingTime = target - delta;
 
   if(target > 0) {
     if(remainingTime > (delta * 0.9)) {
-      EngineWait(remainingTime);
+      PEngineWait(remainingTime);
     }
-    while((delta = EngineGetTime() - SFrameStartTime) < target) {
+    while((delta = PEngineGetTime() - SFrameStartTime) < target) {
     }
   }
   GEngine.timerApi.deltaTime = delta;
   GEngine.timerApi.frameRate = ceil(1.0f / delta);
 }
 
-Void EngineFullscreen(Bool bFullscreen) {
+void PEngineFullscreen(bool bFullscreen) {
   GEngine.windowApi.OnWindowFullscreen(bFullscreen);
 }
 
-Double EngineGetTime() {
+double PEngineGetTime() {
   struct timespec timeSpec;
   clock_gettime(CLOCK_MONOTONIC, &timeSpec);
-  return (Double)timeSpec.tv_sec + (Double)timeSpec.tv_nsec / 1000000000.0f;
+  return (double)timeSpec.tv_sec + (double)timeSpec.tv_nsec / 1000000000.0f;
 }
 
-Void EngineSetTargetFPS(UInt32 Target) {
+void PEngineSetTargetFPS(uint32 Target) {
   GEngine.timerApi.frameTime = 1.f / Target;
 }
 
-Void EngineWait(Double Milliseconds) {
+void PEngineWait(double Milliseconds) {
   struct timespec time;
-  Int32 sec = (Int32)(Milliseconds / 1000);
-  Int32 nSeg = (Int32)(Milliseconds - sec * 1000) * 1000000.0f;
+  int32 sec = (int32)(Milliseconds / 1000);
+  int32 nSeg = (int32)(Milliseconds - sec * 1000) * 1000000.0f;
 
   time.tv_sec = sec;
   time.tv_nsec = nSeg;
@@ -90,30 +90,30 @@ Void EngineWait(Double Milliseconds) {
 }
 
 // Module
-Void* EngineLoadModule(String Name) {
+void* PModuleLoad(cstring Name) {
   return dlopen(Name, RTLD_LAZY | RTLD_GLOBAL);
 }
 
-Void EngineFreeModule(Void* Module) {
+void PModuleFree(void* Module) {
   if(Module != NULL) {
     dlclose(Module);
   }
 }
 
-Void* EngineGetFunc(Void* Module, String Name) {
+void* PModuleGetFunc(void* Module, cstring Name) {
   return dlsym(Module, Name);
 }
 
-Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
-  String* names = Names;
-  Void* function = NULL;
-  Int32 index = 0;
+void PModuleLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode) {
+  cstring* names = Names;
+  void* function = NULL;
+  int32 index = 0;
 
   while(**names) {
-    function = EngineGetFunc(Module, *names);
+    function = PModuleGetFunc(Module, *names);
     if(function != NULL) {
-      Void* addr = (Char*)Api + index * sizeof(Void*);
-      memcpy(addr, &function, sizeof(Void*));
+      void* addr = (char*)Api + index * sizeof(void*);
+      memcpy(addr, &function, sizeof(void*));
       if(bDebugMode) {
         GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }
@@ -125,33 +125,62 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
   }
 }
 
-Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
-  static Char logBuffer[BUFFER_LOG_SIZE] = {""};
-  static String logTag = NULL;
-  static String logColor = NULL;
-  Bool bIsFast = (Level >> 8);
-  UInt16 logLevel = Level & 0xFF;
+void PMemFree(void* Data) {
+  if(Data == NULL) { return; }
+  free(Data);
+}
+
+void* PMemAlloc(uint64 Size) {
+  return malloc(Size);
+}
+
+void* PMemCalloc(uint32 Count, uint64 Size) {
+  return calloc(Count, Size);
+}
+
+void* PMemRealloc(void* Data, uint64 Size) {
+  return realloc(Data, Size);
+}
+
+void* PMemCopy(void* Dest, void* Src, uint64 Size) {
+  return memcpy(Dest, Src, Size);
+}
+
+void* PMemMove(void* Dest, void* Src, uint64 Size) {
+  return memmove(Dest, Src, Size);
+}
+
+void* PMemSet(void* Data, int32 Value, uint64 Size){
+  return memset(Data, Value, Size);
+}
+
+void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
+  static char logBuffer[BUFFER_LOG_SIZE] = {""};
+  static cstring logTag = NULL;
+  static cstring logColor = NULL;
+  bool bIsFast = (Level >> 16);
+  uint16 logLevel = Level & 0xFFFF;
 
   switch(logLevel) {
     case LOG_INFO: {
-      logColor = (String) "\033[0;97m";
-      logTag = (String) "[LOG INFO] =>";
+      logColor = (cstring) "\033[0;97m";
+      logTag = (cstring) "[LOG INFO] =>";
     } break;
     case LOG_SUCCESS: {
-      logColor = (String) "\033[0;92m";
-      logTag = (String) "[LOG SUCCESS] =>";
+      logColor = (cstring) "\033[0;92m";
+      logTag = (cstring) "[LOG SUCCESS] =>";
     } break;
     case LOG_WARNING: {
-      logColor = (String) "\033[0;93m";
-      logTag = (String) "[LOG WARNING] =>";
+      logColor = (cstring) "\033[0;93m";
+      logTag = (cstring) "[LOG WARNING] =>";
     } break;
     case LOG_ERROR: {
-      logColor = (String) "\033[0;91m";
-      logTag = (String) "[LOG ERROR] =>";
+      logColor = (cstring) "\033[0;91m";
+      logTag = (cstring) "[LOG ERROR] =>";
     } break;
     case LOG_FATAL: {
-      logColor = (String) "\033[0;31m";
-      logTag = (String) "[LOG FATAL] =>";
+      logColor = (cstring) "\033[0;31m";
+      logTag = (cstring) "[LOG FATAL] =>";
     } break;
   }
 

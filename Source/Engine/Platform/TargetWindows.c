@@ -134,8 +134,8 @@ void EngineLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode) {
 void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
   static char logBuffer[BUFFER_LOG_SIZE] = {""};
   static cstring logTag = NULL;
-  bool bIsFast = (Level >> 8);
-  uint16 logLevel = Level & 0xFF;
+  bool bIsFast = (Level >> 16);
+  uint16 logLevel = Level & 0xFFFF;
 
   enum {
     LC_WHITE = 15,
