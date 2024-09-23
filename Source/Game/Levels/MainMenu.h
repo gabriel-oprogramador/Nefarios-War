@@ -4,12 +4,12 @@
 class UMainMenu : public ILevel{
 public:
   UMainMenu();
-  virtual Void BeginPlay();
-  virtual Void Tick(Float DeltaTime);
-  virtual Void EndPlay();
+  virtual void BeginPlay();
+  virtual void Tick(float DeltaTime);
+  virtual void EndPlay();
 private:
   FColor m_colorNormal;
   FColor m_colorFullscreen;
-  Bool m_bFullscreen;
-  Bool m_bGameMode;
+  bool m_bFullscreen;
+  bool m_bGameMode;
 };

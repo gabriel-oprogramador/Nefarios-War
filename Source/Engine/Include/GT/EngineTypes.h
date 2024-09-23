@@ -1,42 +1,37 @@
 #pragma once
 #include <stdbool.h>
 
-typedef void Void;
-typedef bool Bool;
-typedef char Char;
-typedef short Int16;
-typedef int Int32;
-typedef long long Int64;
-typedef unsigned char UChar;
-typedef unsigned short UInt16;
-typedef unsigned int UInt32;
-typedef unsigned long long UInt64;
-typedef float Float;
-typedef double Double;
-typedef const char* String;
+typedef short int16;
+typedef int int32;
+typedef long long int64;
+typedef unsigned char uchar;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
+typedef unsigned long long uint64;
+typedef const char* cstring;
 
 typedef struct {
-  Float r;
-  Float g;
-  Float b;
-  Float a;
+  float r;
+  float g;
+  float b;
+  float a;
 } FColor;
 
 typedef struct {
-  Float x;
-  Float y;
+  float x;
+  float y;
 } FVector2;
 
 typedef struct {
-  Float x;
-  Float y;
-  Float z;
+  float x;
+  float y;
+  float z;
 } FVector;
 
 typedef struct {
-  Float pitch;
-  Float yaw;
-  Float roll;
+  float pitch;
+  float yaw;
+  float roll;
 } FRotator;
 
 typedef enum {

@@ -1,14 +1,14 @@
 #include "GameFramework.h"
 #include "GT/Engine.h"
 
-Void FTimerUpdate(Float DeltaTime) {
+void FTimerUpdate(float DeltaTime) {
   // Call timers update
 }
 
-Double FTimerGetDeltaTime() {
+double FTimerGetDeltaTime() {
   return GEngine.timerApi.deltaTime;
 }
 
-UInt32 FTimerGetFrameRate() {
+uint32 FTimerGetFrameRate() {
   return GEngine.timerApi.frameRate;
 }

@@ -2,13 +2,13 @@
 #include "GameModule.h"
 
 // Engine primary systems.
-extern Void FInputUpdate(Float DeltaTime);
-extern Void FTimerUpdate(Float DeltaTime);
+extern void FInputUpdate(float DeltaTime);
+extern void FTimerUpdate(float DeltaTime);
 
 // Gameplay Control.
-static Bool SbInitGamePlay = true;
-static Bool SbGameIsRunning = false;
-static Float deltaTime = 0.f;
+static bool SbInitGamePlay = true;
+static bool SbGameIsRunning = false;
+static float deltaTime = 0.f;
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
@@ -18,7 +18,7 @@ int GTmain(int argc, const char** argv) {
   GameInit();
 
   while(!EngineShouldClose()) {
-    deltaTime = (Float)GEngine.timerApi.deltaTime;
+    deltaTime = (float)GEngine.timerApi.deltaTime;
     EngineBeginFrame();
     FInputUpdate(deltaTime);
     if(SbInitGamePlay && !SbGameIsRunning) {

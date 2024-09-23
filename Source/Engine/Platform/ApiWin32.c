@@ -6,9 +6,9 @@
 
 #define CODE_WINDOW_CLOSE WM_USER + 1
 
-extern HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits);
+extern HGLRC ApiWglInit(HWND Window, HDC Device, int32 Major, int32 Minor, int32 ColorBits, int32 DepthBits);
 
-static Void* SLibUser32 = NULL;
+static void* SLibUser32 = NULL;
 
 static const char* SLibUser32Names[] = {
     "EnumDisplaySettingsA",
@@ -52,7 +52,7 @@ static struct {
   BOOL (*UpdateWindow)(HWND hWnd);
   BOOL (*GetWindowPlacement)(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
   BOOL (*SetWindowPlacement)(HWND hWnd, const WINDOWPLACEMENT *lpwndpl);
-  BOOL (*SetWindowTextA) (HWND hWnd, LPCSTR lpString);
+  BOOL (*SetWindowTextA) (HWND hWnd, LPCSTR lpcstring);
   int (*ShowCursor)(BOOL bShow);
   ATOM (*RegisterClassExA) (const WNDCLASSEXA* unnamedParam1);
   LRESULT (*DefWindowProcA) (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
@@ -84,16 +84,16 @@ static struct {
   HDC device;
 } SWindow;
 
-static Void InternalUpdateWindowTitle();
+static void InternalUpdateWindowTitle();
 static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed);
+static void InternalUpdateKey(uint64 KeyCode, bool bIsPressed);
 
 // Functions to assist in creating the dummy window for WGL Api.
-HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title);
-Void ApiWin32DestroyWindow(HWND Window);
+HWND ApiWin32CreateWindow(int32 Width, int32 Height, cstring Title);
+void ApiWin32DestroyWindow(HWND Window);
 HDC ApiWin32GetDC(HWND Window);
 
-Void ApiWin32WindowCreate(Int32 Width, Int32 Height, String Title) {
+void ApiWin32WindowCreate(int32 Width, int32 Height, cstring Title) {
   SWindow.window = ApiWin32CreateWindow(Width, Height, Title);
   SWindow.device = ApiWin32GetDC(SWindow.window);
   // TODO: Never use magic numbers!
@@ -106,7 +106,7 @@ Void ApiWin32WindowCreate(Int32 Width, Int32 Height, String Title) {
   GT_LOG(LOG_INFO, "API:WIN32 Created Window => Width:%d Height:%d Title:%s", Width, Height, Title);
 }
 
-Void ApiWin32WindowUpdate() {
+void ApiWin32WindowUpdate() {
 #ifdef DEBUG_MODE
   InternalUpdateWindowTitle();
 #endif  // DEBUG_MODE
@@ -126,16 +126,16 @@ Void ApiWin32WindowUpdate() {
   }
 }
 
-Void ApiWin32WindowDestroy() {
+void ApiWin32WindowDestroy() {
   GT_LOG(LOG_INFO, "API:WIN32 Closed Window");
   ApiWin32DestroyWindow(SWindow.window);
 }
 
-static Void InternalUpdateWindowTitle() {
-  Char buffer[BUFFER_SMALL] = "";
-  String title = GEngine.windowApi.title;
-  Double deltaTime = GEngine.timerApi.deltaTime;
-  UInt32 frameRate = GEngine.timerApi.frameRate;
+static void InternalUpdateWindowTitle() {
+  char buffer[BUFFER_SMALL] = "";
+  cstring title = GEngine.windowApi.title;
+  double deltaTime = GEngine.timerApi.deltaTime;
+  uint32 frameRate = GEngine.timerApi.frameRate;
   snprintf(buffer, BUFFER_SMALL, "%s (Debug Mode) => FPS:%u | MS:%f", title, frameRate, deltaTime);
   SApiUser32.SetWindowTextA(SWindow.window, buffer);
 }
@@ -173,14 +173,14 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
     } break;
 
     case WM_MOUSEWHEEL: {
-      Int32 delta = GET_WHEEL_DELTA_WPARAM(wParam);
-      UInt32 key = (delta > 0) ? MOUSE_FORWARD_CODE : MOUSE_BACKWARD_CODE;
+      int32 delta = GET_WHEEL_DELTA_WPARAM(wParam);
+      uint32 key = (delta > 0) ? MOUSE_FORWARD_CODE : MOUSE_BACKWARD_CODE;
       InternalUpdateKey(key, true);
     } break;
 
     case WM_MOUSEMOVE: {
-      Float posX = (Float)GET_X_LPARAM(lParam);
-      Float posY = (Float)GET_Y_LPARAM(lParam);
+      float posX = (float)GET_X_LPARAM(lParam);
+      float posY = (float)GET_Y_LPARAM(lParam);
       GEngine.inputApi.mousePosition[0] = (posX < 0) ? 0.f : posX;
       GEngine.inputApi.mousePosition[1] = (posX < 0) ? 0.f : posY;
     } break;
@@ -199,7 +199,7 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
   return 0;
 }
 
-Void ApiWin32SetFullscreen(Bool bFullscreen) {
+void ApiWin32SetFullscreen(bool bFullscreen) {
   GEngine.windowApi.bFullscreen = bFullscreen;
 
   if(bFullscreen) {
@@ -211,7 +211,7 @@ Void ApiWin32SetFullscreen(Bool bFullscreen) {
     SWindow.style = SApiUser32.GetWindowLongPtrA(SWindow.window, GWL_STYLE);
 
     SApiUser32.SetWindowLongPtrA(SWindow.window, GWL_STYLE, WS_POPUP);
-    UInt32 mask = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
+    uint32 mask = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
     SApiUser32.SetWindowPos(SWindow.window, HWND_TOP, 0, 0, dm.dmPelsWidth, dm.dmPelsHeight, mask);
   } else {
     SApiUser32.SetWindowLongPtrA(SWindow.window, GWL_STYLE, SWindow.style);
@@ -222,7 +222,7 @@ Void ApiWin32SetFullscreen(Bool bFullscreen) {
   SApiUser32.UpdateWindow(SWindow.window);
 }
 
-Void ApiWin32ShowCursor(Bool bShow) {
+void ApiWin32ShowCursor(bool bShow) {
   if(GEngine.windowApi.bShowCursor == bShow) {
     return;
   }
@@ -230,23 +230,23 @@ Void ApiWin32ShowCursor(Bool bShow) {
   SApiUser32.ShowCursor(bShow);
 }
 
-Void ApiWin32SetCursorPos(UInt32 X, UInt32 Y) {
+void ApiWin32SetCursorPos(uint32 X, uint32 Y) {
   RECT windowRect = {0};
   POINT clientTopLeft = {0};
 
   SApiUser32.GetWindowRect(SWindow.window, &windowRect);
   SApiUser32.ClientToScreen(SWindow.window, &clientTopLeft);
 
-  UInt32 borderOffsetX = clientTopLeft.x - windowRect.left;
-  UInt32 borderOffsetY = clientTopLeft.y - windowRect.top;
-  UInt32 xScreen = windowRect.left + borderOffsetX + X;
-  UInt32 yScreen = windowRect.top + borderOffsetY + Y;
+  uint32 borderOffsetX = clientTopLeft.x - windowRect.left;
+  uint32 borderOffsetY = clientTopLeft.y - windowRect.top;
+  uint32 xScreen = windowRect.left + borderOffsetX + X;
+  uint32 yScreen = windowRect.top + borderOffsetY + Y;
 
   SApiUser32.SetCursorPos(xScreen, yScreen);
 }
 
-static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed) {
-  static UInt32 vkCode[] = {
+static void InternalUpdateKey(uint64 KeyCode, bool bIsPressed) {
+  static uint32 vkCode[] = {
       VK_OEM_7,            // Key: '
       VK_OEM_COMMA,        // Key: ,
       VK_OEM_MINUS,        // Key: -
@@ -359,7 +359,7 @@ static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed) {
       MOUSE_BACKWARD_CODE  // Mouse Backward
   };
 
-  for(Int32 c = 0; c < KEY_MAX; c++) {
+  for(int32 c = 0; c < KEY_MAX; c++) {
     if(vkCode[c] == KeyCode) {
       GEngine.inputApi.currentKeys[c] = bIsPressed;
       break;
@@ -368,8 +368,8 @@ static Void InternalUpdateKey(UInt64 KeyCode, Bool bIsPressed) {
 }
 
 // Function to assist in creating the dummy window for WGL Api.
-HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title) {
-  String windowClassName = "GameWindow";
+HWND ApiWin32CreateWindow(int32 Width, int32 Height, cstring Title) {
+  cstring windowClassName = "GameWindow";
   HINSTANCE hInstance = GetModuleHandleA(NULL);
   WNDCLASSEXA wc = {0};
 
@@ -393,9 +393,9 @@ HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title) {
     GT_LOG(LOG_ERROR, "API:WIN32 No Adjust Window Rect");
   }
 
-  Int32 winWidth = winRect.right - winRect.left;
-  Int32 winHeight = winRect.bottom - winRect.top;
-  UInt32 winStyle = WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE;
+  int32 winWidth = winRect.right - winRect.left;
+  int32 winHeight = winRect.bottom - winRect.top;
+  uint32 winStyle = WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE;
   HWND hWin = SApiUser32.CreateWindowExA(0, windowClassName, Title, winStyle, CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
   if(hWin == NULL) {
     GT_LOG(LOG_FATAL, "API:WIN32 Not Create Game Window");
@@ -405,7 +405,7 @@ HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title) {
   return hWin;
 }
 
-Void ApiWin32DestroyWindow(HWND Window) {
+void ApiWin32DestroyWindow(HWND Window) {
   SApiUser32.DestroyWindow(Window);
 }
 
@@ -414,7 +414,7 @@ HDC ApiWin32GetDC(HWND Window) {
 }
 
 // Setting the Win32 API interface.
-Bool ApiWin32Init(IWindowApi* WindowApi) {
+bool ApiWin32Init(IWindowApi* WindowApi) {
   SLibUser32 = EngineLoadModule("user32.dll");
   if(SLibUser32 == NULL) {
     return false;

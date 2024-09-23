@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-ENGINE_API Void GameInit();
-ENGINE_API Void GameStart();
-ENGINE_API Void GameUpdate(Float DeltaTime);
-ENGINE_API Void GameStop();
+ENGINE_API void GameInit();
+ENGINE_API void GameStart();
+ENGINE_API void GameUpdate(float DeltaTime);
+ENGINE_API void GameStop();

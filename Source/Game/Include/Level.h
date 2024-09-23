@@ -3,9 +3,9 @@
 
 class ILevel {
 public:
-  virtual Void BeginPlay() = 0;
-  virtual Void Tick(Float DeltaTime) = 0;
-  virtual Void EndPlay() = 0;
+  virtual void BeginPlay() = 0;
+  virtual void Tick(float DeltaTime) = 0;
+  virtual void EndPlay() = 0;
 };
 
 // In Game Open Level

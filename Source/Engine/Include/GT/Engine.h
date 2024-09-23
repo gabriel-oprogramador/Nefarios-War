@@ -2,37 +2,37 @@
 #include "CoreMinimal.h"
 
 typedef struct {
-  Int32 width;
-  Int32 height;
-  String title;
-  Bool bFullscreen;
-  Bool bShouldClose;
-  Bool bShowCursor;
-  Bool bCursorCaptured;
-  Void (*OnWindowCreate)(Int32, Int32, String);
-  Void (*OnWindowUpdate)();
-  Void (*OnWindowDestroy)();
-  Void (*OnWindowFullscreen)(Bool);
-  Void (*OnWindowShowCursor)(Bool);
-  Void (*OnWindowSetCursorPos)(UInt32, UInt32);
+  int32 width;
+  int32 height;
+  cstring title;
+  bool bFullscreen;
+  bool bShouldClose;
+  bool bShowCursor;
+  bool bCursorCaptured;
+  void (*OnWindowCreate)(int32, int32, cstring);
+  void (*OnWindowUpdate)();
+  void (*OnWindowDestroy)();
+  void (*OnWindowFullscreen)(bool);
+  void (*OnWindowShowCursor)(bool);
+  void (*OnWindowSetCursorPos)(uint32, uint32);
 } IWindowApi;
 
 typedef struct {
   // Future implementation of the audio API!
-  Char* none;
+  char* none;
 } IAudioApi;
 
 typedef struct {
-  UChar previousKeys[KEY_MAX];
-  UChar currentKeys[KEY_MAX];
-  Float mousePosition[2];
+  uchar previousKeys[KEY_MAX];
+  uchar currentKeys[KEY_MAX];
+  float mousePosition[2];
 } IInputApi;
 
 typedef struct {
-  Float frameTime;
-  UInt32 frameRate;
-  Double deltaTime;
-  Float engineStartTime;
+  float frameTime;
+  uint32 frameRate;
+  double deltaTime;
+  float engineStartTime;
 } ITimeApi;
 
 typedef struct {
@@ -44,25 +44,25 @@ typedef struct {
 
 ENGINE_API FGT GEngine;
 
-ENGINE_API Bool EngineProcess(UInt64 Flags, String* Args);
-ENGINE_API Void EngineInitialize(Int32 Width, Int32 Height, String Title);
-ENGINE_API Void EngineTerminate();
-ENGINE_API Bool EngineShouldClose();
-ENGINE_API Void EngineShutdown();
-ENGINE_API Void EngineBeginFrame();
-ENGINE_API Void EngineEndFrame();
-ENGINE_API Void EngineFullscreen(Bool bFullscreen);
+ENGINE_API bool EngineProcess(uint64 Flags, cstring* Args);
+ENGINE_API void EngineInitialize(int32 Width, int32 Height, cstring Title);
+ENGINE_API void EngineTerminate();
+ENGINE_API bool EngineShouldClose();
+ENGINE_API void EngineShutdown();
+ENGINE_API void EngineBeginFrame();
+ENGINE_API void EngineEndFrame();
+ENGINE_API void EngineFullscreen(bool bFullscreen);
 
 // Returns in Seconds
-ENGINE_API Double EngineGetTime();
-ENGINE_API Void EngineSetTargetFPS(UInt32 Target);
-ENGINE_API Void EngineWait(Double Milliseconds);
+ENGINE_API double EngineGetTime();
+ENGINE_API void EngineSetTargetFPS(uint32 Target);
+ENGINE_API void EngineWait(double Milliseconds);
 
 // Module
-ENGINE_API Void* EngineLoadModule(String Name);
-ENGINE_API Void EngineFreeModule(Void* Module);
-ENGINE_API Void* EngineGetFunc(Void* Module, String Name);
-ENGINE_API Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode);
+ENGINE_API void* EngineLoadModule(cstring Name);
+ENGINE_API void EngineFreeModule(void* Module);
+ENGINE_API void* EngineGetFunc(void* Module, cstring Name);
+ENGINE_API void EngineLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode);
 
 #define MOUSE_LEFT_CODE     0b0001  // 0x1 D1
 #define MOUSE_MIDDLE_CODE   0b0010  // 0x2 D2

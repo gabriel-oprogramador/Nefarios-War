@@ -6,20 +6,20 @@
 
 FGT GEngine;
 
-extern Bool ApiWin32Init(IWindowApi* WindowApi);
-extern Void ApiGdiSwapBuffer();
+extern bool ApiWin32Init(IWindowApi* WindowApi);
+extern void ApiGdiSwapBuffer();
 
 static FILE* SLogFile = NULL;
-static String SLogFilePath = "LogFile.txt";
-static Double SFrameStartTime = 0;
+static cstring SLogFilePath = "LogFile.txt";
+static double SFrameStartTime = 0;
 static LARGE_INTEGER STimeFrequency;
 
 static struct {
   HANDLE hConsole;
-  Int32 defaultAttribute;
+  int32 defaultAttribute;
 } SConsole;
 
-static Void InitWin32Console() {
+static void InitWin32Console() {
   GEngine.windowApi.bShouldClose = true;
   SConsole.hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO consoleScreenInfo;
@@ -27,13 +27,13 @@ static Void InitWin32Console() {
   SConsole.defaultAttribute = consoleScreenInfo.wAttributes;
 }
 
-Bool EngineProcess(UInt64 Flags, String* Args) {
+bool EngineProcess(uint64 Flags, cstring* Args) {
   return false;
 }
 
-Void EngineInitialize(Int32 Width, Int32 Height, String Title) {
+void EngineInitialize(int32 Width, int32 Height, cstring Title) {
   QueryPerformanceFrequency(&STimeFrequency);
-  GEngine.timerApi.engineStartTime = (Float)EngineGetTime();
+  GEngine.timerApi.engineStartTime = (float)EngineGetTime();
   GEngine.windowApi.bShowCursor = true;  // It is necessary to start as true to avoid bugs with WinApi
   InitWin32Console();
   fopen_s(&SLogFile, SLogFilePath, "w");
@@ -42,29 +42,29 @@ Void EngineInitialize(Int32 Width, Int32 Height, String Title) {
   }
 }
 
-Void EngineTerminate() {
+void EngineTerminate() {
   GEngine.windowApi.OnWindowDestroy();
 }
 
-Bool EngineShouldClose() {
+bool EngineShouldClose() {
   return GEngine.windowApi.bShouldClose;
 }
 
-Void EngineShutdown() {
+void EngineShutdown() {
   GEngine.windowApi.bShouldClose = true;
 }
 
-Void EngineBeginFrame() {
+void EngineBeginFrame() {
   SFrameStartTime = EngineGetTime();
   GEngine.windowApi.OnWindowUpdate();
 }
 
-Void EngineEndFrame() {
+void EngineEndFrame() {
   ApiGdiSwapBuffer();
-  Double end = EngineGetTime();
-  Double delta = end - SFrameStartTime;
-  Double target = GEngine.timerApi.frameTime;
-  Double remainingTime = target - delta;
+  double end = EngineGetTime();
+  double delta = end - SFrameStartTime;
+  double target = GEngine.timerApi.frameTime;
+  double remainingTime = target - delta;
 
   if(target > 0) {
     if(remainingTime > (delta * 0.9)) {
@@ -74,52 +74,52 @@ Void EngineEndFrame() {
   }
 
   GEngine.timerApi.deltaTime = delta;
-  GEngine.timerApi.frameRate = (UInt32)ceil(1.f / delta);
+  GEngine.timerApi.frameRate = (uint32)ceil(1.f / delta);
 }
 
-Void EngineFullscreen(Bool bFullscreen) {
+void EngineFullscreen(bool bFullscreen) {
   GEngine.windowApi.OnWindowFullscreen(bFullscreen);
 }
 
-Double EngineGetTime() {
+double EngineGetTime() {
   LARGE_INTEGER counter;
   QueryPerformanceCounter(&counter);
-  return (Double)(counter.QuadPart) / STimeFrequency.QuadPart;
+  return (double)(counter.QuadPart) / STimeFrequency.QuadPart;
 }
 
-Void EngineSetTargetFPS(UInt32 Target) {
+void EngineSetTargetFPS(uint32 Target) {
   GEngine.timerApi.frameTime = 1.f / Target;
 }
 
-Void EngineWait(Double Milliseconds) {
+void EngineWait(double Milliseconds) {
   Sleep((DWORD)Milliseconds);
 }
 
 // Module
-Void* EngineLoadModule(String Name) {
+void* EngineLoadModule(cstring Name) {
   return LoadLibraryA(Name);
 }
 
-Void EngineFreeModule(Void* Module) {
+void EngineFreeModule(void* Module) {
   if(Module != NULL) {
     FreeLibrary((HMODULE)Module);
   }
 }
 
-Void* EngineGetFunc(Void* Module, String Name) {
-  return (Void*)GetProcAddress((HMODULE)Module, Name);
+void* EngineGetFunc(void* Module, cstring Name) {
+  return (void*)GetProcAddress((HMODULE)Module, Name);
 }
 
-Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
-  String* names = Names;
-  Void* function = NULL;
-  Int32 index = 0;
+void EngineLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode) {
+  cstring* names = Names;
+  void* function = NULL;
+  int32 index = 0;
 
   while(**names) {
     function = EngineGetFunc(Module, *names);
     if(function != NULL) {
-      Void* addr = (Char*)Api + index * sizeof(Void*);
-      memcpy(addr, &function, sizeof(Void*));
+      void* addr = (char*)Api + index * sizeof(void*);
+      memcpy(addr, &function, sizeof(void*));
       if(bDebugMode) {
         GT_LOG(LOG_INFO, "Function Loaded:%s", *names);
       }
@@ -131,11 +131,11 @@ Void EngineLoadApi(Void* Module, Void* Api, String* Names, Bool bDebugMode) {
   }
 }
 
-Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
-  static Char logBuffer[BUFFER_LOG_SIZE] = {""};
-  static String logTag = NULL;
-  Bool bIsFast = (Level >> 8);
-  UInt16 logLevel = Level & 0xFF;
+void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
+  static char logBuffer[BUFFER_LOG_SIZE] = {""};
+  static cstring logTag = NULL;
+  bool bIsFast = (Level >> 8);
+  uint16 logLevel = Level & 0xFF;
 
   enum {
     LC_WHITE = 15,
@@ -149,23 +149,23 @@ Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...) {
 
   switch(logLevel) {
     case LOG_INFO: {
-      logTag = (String) "[LOG INFO] =>";
+      logTag = (cstring) "[LOG INFO] =>";
       color = LC_WHITE;
     } break;
     case LOG_SUCCESS: {
-      logTag = (String) "[LOG SUCCESS] =>";
+      logTag = (cstring) "[LOG SUCCESS] =>";
       color = LC_GREEN;
     } break;
     case LOG_WARNING: {
-      logTag = (String) "[LOG WARNING] =>";
+      logTag = (cstring) "[LOG WARNING] =>";
       color = LC_YELLOW;
     } break;
     case LOG_ERROR: {
-      logTag = (String) "[LOG ERROR] =>";
+      logTag = (cstring) "[LOG ERROR] =>";
       color = LC_RED;
     } break;
     case LOG_FATAL: {
-      logTag = (String) "[LOG FATAL] =>";
+      logTag = (cstring) "[LOG FATAL] =>";
       color = LC_DARK_RED;
     } break;
   }

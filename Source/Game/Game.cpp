@@ -3,17 +3,17 @@
 
 ILevel* SCurrentLevel = NULL;
 
-Void GameInit() {
+void GameInit() {
   SCurrentLevel = OpenLevel<UMainMenu>();
 }
 
-Void GameStart() {
+void GameStart() {
 }
 
-Void GameUpdate(Float DeltaTime) {
+void GameUpdate(float DeltaTime) {
   SCurrentLevel->Tick(DeltaTime);
 }
 
-Void GameStop() {
+void GameStop() {
   SCurrentLevel->EndPlay();
 }

@@ -3,7 +3,7 @@
 
 static EInputMode SInputMode;
 
-Void FInputUpdate(Float DeltaTime) {
+void FInputUpdate(float DeltaTime) {
   if(GEngine.windowApi.bCursorCaptured) {
     FInputSetCursorPos((FVector2){GEngine.windowApi.width / 2.f, GEngine.windowApi.height / 2.f});
   }
@@ -28,7 +28,7 @@ EInputMode FInputGetMode() {
   return SInputMode;
 }
 
-Void FInputSetMode(EInputMode InputMode) {
+void FInputSetMode(EInputMode InputMode) {
   SInputMode = InputMode;
   switch(InputMode) {
     case IM_GAME_ONLY: {
@@ -48,46 +48,46 @@ Void FInputSetMode(EInputMode InputMode) {
   }
 }
 
-Bool FInputIsPressed(UChar KeyCode) {
+bool FInputIsPressed(uchar KeyCode) {
   return (GEngine.inputApi.currentKeys[KeyCode] && !GEngine.inputApi.previousKeys[KeyCode]);
 }
 
-Bool FInputIsRelease(UChar KeyCode) {
+bool FInputIsRelease(uchar KeyCode) {
   return (!GEngine.inputApi.currentKeys[KeyCode] && GEngine.inputApi.previousKeys[KeyCode]);
 }
 
-Bool FInputIsRepeat(UChar KeyCode) {
+bool FInputIsRepeat(uchar KeyCode) {
   return (GEngine.inputApi.currentKeys[KeyCode] && GEngine.inputApi.previousKeys[KeyCode]);
 }
 
-Float FInputGetMouseX() {
+float FInputGetMouseX() {
   return GEngine.inputApi.mousePosition[0];
 }
 
-Float FInputGetMouseY() {
+float FInputGetMouseY() {
   return GEngine.inputApi.mousePosition[1];
 }
 
-Void FInputSetCursorPos(FVector2 NewPosition) {
-  GEngine.windowApi.OnWindowSetCursorPos((UInt32)NewPosition.x, (UInt32)NewPosition.y);
+void FInputSetCursorPos(FVector2 NewPosition) {
+  GEngine.windowApi.OnWindowSetCursorPos((uint32)NewPosition.x, (uint32)NewPosition.y);
 }
 
 FVector2 FInputGetCursorPos() {
   return (FVector2){GEngine.inputApi.mousePosition[0], GEngine.inputApi.mousePosition[1]};
 }
 
-Bool FInputIsCursorShow() {
+bool FInputIsCursorShow() {
   return GEngine.windowApi.bShowCursor;
 }
 
-Void FInputShowCursor(Bool bShow) {
+void FInputShowCursor(bool bShow) {
   GEngine.windowApi.OnWindowShowCursor(bShow);
 }
 
-Bool FInputIsCursorCaptured() {
+bool FInputIsCursorCaptured() {
   return GEngine.windowApi.bCursorCaptured;
 }
 
-Void FInputCaptureCursor(Bool bCapture) {
+void FInputCaptureCursor(bool bCapture) {
   GEngine.windowApi.bCursorCaptured = bCapture;
 }

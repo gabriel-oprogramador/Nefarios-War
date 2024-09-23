@@ -11,11 +11,11 @@ UMainMenu::UMainMenu() {
   glClearColor(FCOLOR_GL(this->m_colorNormal));
 }
 
-Void UMainMenu::BeginPlay() {
+void UMainMenu::BeginPlay() {
   
 }
 
-Void UMainMenu::Tick(Float DeltTime) {
+void UMainMenu::Tick(float DeltTime) {
   if(FInputIsPressed(KEY_TAB)){
     this->m_bFullscreen = !this->m_bFullscreen;
     EngineFullscreen(this->m_bFullscreen);
@@ -36,5 +36,5 @@ Void UMainMenu::Tick(Float DeltTime) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-Void UMainMenu::EndPlay() {
+void UMainMenu::EndPlay() {
 }

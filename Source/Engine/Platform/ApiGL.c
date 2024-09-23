@@ -3,11 +3,11 @@
 
 #ifdef PLATFORM_WINDOWS
 typedef PROC (*FWglGetProcAddress)(LPCSTR);
-static Void* LoadFunction(Void* Lib, String Name) {
+static void* LoadFunction(void* Lib, cstring Name) {
   FWglGetProcAddress OnWglGetProcAddress = (FWglGetProcAddress)EngineGetFunc(Lib, "wglGetProcAddress");
-  Void* func = EngineGetFunc(Lib, Name);
+  void* func = EngineGetFunc(Lib, Name);
   if(func == NULL) {
-    func = (Void*)OnWglGetProcAddress(Name);
+    func = (void*)OnWglGetProcAddress(Name);
   }
   return func;
 }
@@ -1289,7 +1289,7 @@ PFNGLGETINTEGERUI64I_VNVPROC glGetIntegerui64i_vNV;
 PFNGLVIEWPORTSWIZZLENVPROC glViewportSwizzleNV;
 PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR;
 
-Void ApiGLLoadFunctions(Void* LibGL) {
+void ApiGLLoadFunctions(void* LibGL) {
 #ifdef PLATFORM_WINDOWS
 #define GLAPI_GETPROC(Name) LoadFunction(LibGL, #Name)
 #elif PLATFORM_LINUX

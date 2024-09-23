@@ -5,15 +5,15 @@
 
 #include <windows.h>
 
-extern HWND ApiWin32CreateWindow(Int32 Width, Int32 Height, String Title);
-extern Void ApiWin32DestroyWindow(HWND Window);
+extern HWND ApiWin32CreateWindow(int32 Width, int32 Height, cstring Title);
+extern void ApiWin32DestroyWindow(HWND Window);
 extern HDC ApiWin32GetDC(HWND Window);
-extern Void ApiGLLoadFunctions(Void* LibGL);
+extern void ApiGLLoadFunctions(void* LibGL);
 
-static Void* SLibGdi32 = NULL;
-static Void* SLibGL32 = NULL;
+static void* SLibGdi32 = NULL;
+static void* SLibGL32 = NULL;
 
-static String SLibGdi32Names[] = {
+static cstring SLibGdi32Names[] = {
     "ChoosePixelFormat",
     "SetPixelFormat",
     "SwapBuffers",
@@ -27,7 +27,7 @@ static struct {
 } SApiGdi;
 // clang-format on
 
-static String SLibWglNames[] = {
+static cstring SLibWglNames[] = {
     "wglCreateContext",
     "wglMakeCurrent",
     "wglGetProcAddress",
@@ -51,11 +51,11 @@ static struct {
   HGLRC context;
 } SWglInfo;
 
-Void ApiGdiSwapBuffer() {
+void ApiGdiSwapBuffer() {
   SApiGdi.SwapBuffers(SWglInfo.device);
 }
 
-HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorBits, Int32 DepthBits) {
+HGLRC ApiWglInit(HWND Window, HDC Device, int32 Major, int32 Minor, int32 ColorBits, int32 DepthBits) {
   HWND dummyWindow = ApiWin32CreateWindow(0, 0, "Dummy Window");
   HDC dummyDc = ApiWin32GetDC(dummyWindow);
   HGLRC renderContext = NULL;
@@ -86,7 +86,7 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
       PFD_MAIN_PLANE,
       0, 0, 0, 0};
 
-  Int32 pixelFormat = SApiGdi.ChoosePixelFormat(dummyDc, &pfd);
+  int32 pixelFormat = SApiGdi.ChoosePixelFormat(dummyDc, &pfd);
   if(!pixelFormat) {
     GT_LOG(LOG_FATAL, "API:WGL Not choose Pixel Format");
     ApiWin32DestroyWindow(dummyWindow);
@@ -121,8 +121,8 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
   SApiWgl.wglDeleteContext(renderContext);
   ApiWin32DestroyWindow(dummyWindow);
 
-  Int32 pixelFormatCount;
-  Int32 pixelFormatAttribList[] = {
+  int32 pixelFormatCount;
+  int32 pixelFormatAttribList[] = {
       WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
       WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
       WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
@@ -140,7 +140,7 @@ HGLRC ApiWglInit(HWND Window, HDC Device, Int32 Major, Int32 Minor, Int32 ColorB
     return NULL;
   }
 
-  Int32 contextAttribs[] = {
+  int32 contextAttribs[] = {
       WGL_CONTEXT_MAJOR_VERSION_ARB,
       Major,
       WGL_CONTEXT_MINOR_VERSION_ARB,

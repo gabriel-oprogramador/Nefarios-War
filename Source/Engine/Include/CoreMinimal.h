@@ -21,7 +21,7 @@
 #define FORCE_INLINE static inline
 #endif  // _MSC_VER
 
-ENGINE_API Void EnginePrintLog(ELogLevel Level, String Context, String Format, ...);
+ENGINE_API void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...);
 
 #define NO_EXPAND(a)                   #a
 #define STR(a)                         NO_EXPAND(a)
