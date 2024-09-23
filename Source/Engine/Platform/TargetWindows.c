@@ -154,7 +154,7 @@ void* PMemCopy(void* Dest, void* Src, uint64 Size) {
 }
 
 void* PMemMove(void* Dest, void* Src, uint64 Size) {
-  return memcpy(Dest, Src, Size);
+  return memmove(Dest, Src, Size);
 }
 
 void* PMemSet(void* Data, int32 Value, uint64 Size) {
