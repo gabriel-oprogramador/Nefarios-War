@@ -27,13 +27,13 @@ static void InitWin32Console() {
   SConsole.defaultAttribute = consoleScreenInfo.wAttributes;
 }
 
-bool EngineProcess(uint64 Flags, cstring* Args) {
+bool PEngineProcess(uint64 Flags, cstring* Args) {
   return false;
 }
 
-void EngineInitialize(int32 Width, int32 Height, cstring Title) {
+void PEngineInitialize(int32 Width, int32 Height, cstring Title) {
   QueryPerformanceFrequency(&STimeFrequency);
-  GEngine.timerApi.engineStartTime = (float)EngineGetTime();
+  GEngine.timerApi.engineStartTime = (float)PEngineGetTime();
   GEngine.windowApi.bShowCursor = true;  // It is necessary to start as true to avoid bugs with WinApi
   InitWin32Console();
   fopen_s(&SLogFile, SLogFilePath, "w");
@@ -42,81 +42,81 @@ void EngineInitialize(int32 Width, int32 Height, cstring Title) {
   }
 }
 
-void EngineTerminate() {
+void PEngineTerminate() {
   GEngine.windowApi.OnWindowDestroy();
 }
 
-bool EngineShouldClose() {
+bool PEngineShouldClose() {
   return GEngine.windowApi.bShouldClose;
 }
 
-void EngineShutdown() {
+void PEngineShutdown() {
   GEngine.windowApi.bShouldClose = true;
 }
 
-void EngineBeginFrame() {
-  SFrameStartTime = EngineGetTime();
+void PEngineBeginFrame() {
+  SFrameStartTime = PEngineGetTime();
   GEngine.windowApi.OnWindowUpdate();
 }
 
-void EngineEndFrame() {
+void PEngineEndFrame() {
   ApiGdiSwapBuffer();
-  double end = EngineGetTime();
+  double end = PEngineGetTime();
   double delta = end - SFrameStartTime;
   double target = GEngine.timerApi.frameTime;
   double remainingTime = target - delta;
 
   if(target > 0) {
     if(remainingTime > (delta * 0.9)) {
-      EngineWait(remainingTime);
+      PEngineWait(remainingTime);
     }
-    while((delta = EngineGetTime() - SFrameStartTime) < target) {}
+    while((delta = PEngineGetTime() - SFrameStartTime) < target) {}
   }
 
   GEngine.timerApi.deltaTime = delta;
   GEngine.timerApi.frameRate = (uint32)ceil(1.f / delta);
 }
 
-void EngineFullscreen(bool bFullscreen) {
+void PEngineFullscreen(bool bFullscreen) {
   GEngine.windowApi.OnWindowFullscreen(bFullscreen);
 }
 
-double EngineGetTime() {
+double PEngineGetTime() {
   LARGE_INTEGER counter;
   QueryPerformanceCounter(&counter);
   return (double)(counter.QuadPart) / STimeFrequency.QuadPart;
 }
 
-void EngineSetTargetFPS(uint32 Target) {
+void PEngineSetTargetFPS(uint32 Target) {
   GEngine.timerApi.frameTime = 1.f / Target;
 }
 
-void EngineWait(double Milliseconds) {
+void PEngineWait(double Milliseconds) {
   Sleep((DWORD)Milliseconds);
 }
 
 // Module
-void* EngineLoadModule(cstring Name) {
+void* PModuleLoad(cstring Name) {
   return LoadLibraryA(Name);
 }
 
-void EngineFreeModule(void* Module) {
+void PModuleFree(void* Module) {
   if(Module != NULL) {
     FreeLibrary((HMODULE)Module);
   }
 }
 
-void* EngineGetFunc(void* Module, cstring Name) {
+void* PModuleGetFunc(void* Module, cstring Name) {
   return (void*)GetProcAddress((HMODULE)Module, Name);
 }
 
-void EngineLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode) {
+void PModuleLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode) {
   cstring* names = Names;
   void* function = NULL;
   int32 index = 0;
 
   while(**names) {
-    function = EngineGetFunc(Module, *names);
+    function = PModuleGetFunc(Module, *names);
     if(function != NULL) {
       void* addr = (char*)Api + index * sizeof(void*);
       memcpy(addr, &function, sizeof(void*));
@@ -129,6 +129,36 @@ void EngineLoadApi(void* Module, void* Api, cstring* Names, bool bDebugMode) {
     names++;
     index++;
   }
+}
+
+// Memory
+void PMemFree(void* Data) {
+  if(Data == NULL) { return; }
+  free(Data);
+}
+
+void* PMemAlloc(uint64 Size) {
+  return malloc(Size);
+}
+
+void* PMemCalloc(uint32 Count, uint64 Size) {
+  return calloc(Count, Size);
+}
+
+void* PMemRealloc(void* Data, uint64 Size) {
+  return realloc(Data, Size);
+}
+
+void* PMemCopy(void* Dest, void* Src, uint64 Size) {
+  return memcpy(Dest, Src, Size);
+}
+
+void* PMemMove(void* Dest, void* Src, uint64 Size) {
+  return memcpy(Dest, Src, Size);
+}
+
+void* PMemSet(void* Data, int32 Value, uint64 Size) {
+  return memset(Data, Value, Size);
 }
 
 void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {

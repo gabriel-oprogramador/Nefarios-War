@@ -415,11 +415,12 @@ HDC ApiWin32GetDC(HWND Window) {
 
 // Setting the Win32 API interface.
 bool ApiWin32Init(IWindowApi* WindowApi) {
-  SLibUser32 = EngineLoadModule("user32.dll");
+  SLibUser32 = PModuleLoad("user32.dll");
   if(SLibUser32 == NULL) {
     return false;
   }
-  EngineLoadApi(SLibUser32, &SApiUser32, SLibUser32Names, false);
+  PModuleLoadApi(SLibUser32, &SApiUser32, SLibUser32Names, false);
+
   WindowApi->OnWindowCreate = &ApiWin32WindowCreate;
   WindowApi->OnWindowUpdate = &ApiWin32WindowUpdate;
   WindowApi->OnWindowDestroy = &ApiWin32WindowDestroy;

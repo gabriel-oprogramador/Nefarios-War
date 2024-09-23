@@ -60,8 +60,8 @@ HGLRC ApiWglInit(HWND Window, HDC Device, int32 Major, int32 Minor, int32 ColorB
   HDC dummyDc = ApiWin32GetDC(dummyWindow);
   HGLRC renderContext = NULL;
 
-  SLibGdi32 = EngineLoadModule("gdi32.dll");
-  SLibGL32 = EngineLoadModule("opengl32.dll");
+  SLibGdi32 = PModuleLoad("gdi32.dll");
+  SLibGL32 = PModuleLoad("opengl32.dll");
 
   if(SLibGdi32 == NULL || SLibGL32 == NULL) {
     GT_LOG(LOG_FATAL, "API:WGL Lib gdi32 or opengl32 not loaded");
@@ -69,8 +69,8 @@ HGLRC ApiWglInit(HWND Window, HDC Device, int32 Major, int32 Minor, int32 ColorB
     return NULL;
   }
 
-  EngineLoadApi(SLibGdi32, &SApiGdi, SLibGdi32Names, false);
-  EngineLoadApi(SLibGL32, &SApiWgl, SLibWglNames, false);
+  PModuleLoadApi(SLibGdi32, &SApiGdi, SLibGdi32Names, false);
+  PModuleLoadApi(SLibGL32, &SApiWgl, SLibWglNames, false);
 
   GT_LOG(LOG_INFO, "API:WGL Initialized");
 

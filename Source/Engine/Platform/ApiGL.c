@@ -4,8 +4,8 @@
 #ifdef PLATFORM_WINDOWS
 typedef PROC (*FWglGetProcAddress)(LPCSTR);
 static void* LoadFunction(void* Lib, cstring Name) {
-  FWglGetProcAddress OnWglGetProcAddress = (FWglGetProcAddress)EngineGetFunc(Lib, "wglGetProcAddress");
-  void* func = EngineGetFunc(Lib, Name);
+  FWglGetProcAddress OnWglGetProcAddress = (FWglGetProcAddress)PModuleGetFunc(Lib, "wglGetProcAddress");
+  void* func = PModuleGetFunc(Lib, Name);
   if(func == NULL) {
     func = (void*)OnWglGetProcAddress(Name);
   }
