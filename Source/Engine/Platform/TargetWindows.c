@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "GT/Engine.h"
+#include "Renderer.h"
 
 FGT GEngine;
 
@@ -57,6 +58,7 @@ void PEngineShutdown() {
 void PEngineBeginFrame() {
   SFrameStartTime = PEngineGetTime();
   GEngine.windowApi.OnWindowUpdate();
+  RClearBuffers();
 }
 
 void PEngineEndFrame() {
@@ -137,7 +139,7 @@ void PMemFree(void* Data) {
   free(Data);
 }
 
-void* PMemAlloc(uint64 Size) {
+void* PMemMalloc(uint64 Size) {
   return malloc(Size);
 }
 
@@ -161,18 +163,75 @@ void* PMemSet(void* Data, int32 Value, uint64 Size) {
   return memset(Data, Value, Size);
 }
 
-void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
+// Files
+bool PReadTextFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize) {
+  FILE* file = fopen(Path, "r");
+  if(file == NULL) {
+    cstring path = strstr(Path, STR(GAME_NAME));
+    path = (path == NULL) ? Path : path;
+    GT_LOG(LOG_ALERT, "Does not exist -> %s", path);
+    return false;
+  }
+
+  fseek(file, 0, SEEK_END);
+  uint64 size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  if(FileSize != NULL) *FileSize = (size + ExtraSize);
+
+  *Buffer = PMemCalloc(1, size + ExtraSize + 1);
+
+  fread(*Buffer, 1, size, file);
+  (*Buffer)[size + ExtraSize] = '\0';
+
+  fclose(file);
+  return true;
+}
+
+bool PReadBinaryFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize) {
+  FILE* file = fopen(Path, "rb");
+  if(file == NULL) {
+    cstring path = strstr(Path, STR(GAME_NAME));
+    path = (path == NULL) ? Path : path;
+    GT_LOG(LOG_ALERT, "Does not exist -> %s", path);
+    return false;
+  }
+
+  fseek(file, 0, SEEK_END);
+  uint64 size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  if(FileSize != NULL) *FileSize = (size + ExtraSize);
+
+  *Buffer = PMemCalloc(1, size + ExtraSize);
+
+  uint64 readBytes = fread(*Buffer, 1, size, file);
+
+  if(size != readBytes) {
+    GT_LOG(LOG_ALERT, "Didn't read everything! %llu/%llu -> %s", readBytes, size, Path);
+    fclose(file);
+    return false;
+  }
+
+  fclose(file);
+  return true;
+}
+
+void EnginePrintLog(ELogLevel Level, cstring FuncName, cstring Context, cstring Format, ...) {
   static char logBuffer[BUFFER_LOG_SIZE] = {""};
   static cstring logTag = NULL;
+  cstring context = Context;
+  cstring funcName = FuncName;
   bool bIsFast = (Level >> 16);
   uint16 logLevel = Level & 0xFFFF;
 
   enum {
-    LC_WHITE = 15,
+    LC_WHITE = 7,
     LC_GREEN = 10,
     LC_YELLOW = 14,
     LC_RED = 12,
     LC_DARK_RED = 4,
+    LC_DARK_YELLOW = 6
   } color;
 
   color = LC_WHITE;
@@ -181,6 +240,8 @@ void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
     case LOG_INFO: {
       logTag = (cstring) "[LOG INFO] =>";
       color = LC_WHITE;
+      funcName = (cstring) "";
+      context = (cstring) "";
     } break;
     case LOG_SUCCESS: {
       logTag = (cstring) "[LOG SUCCESS] =>";
@@ -198,12 +259,18 @@ void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
       logTag = (cstring) "[LOG FATAL] =>";
       color = LC_DARK_RED;
     } break;
+    case LOG_ALERT: {
+      logTag = (cstring) "[LOG ALERT] =>";
+      color = LC_DARK_YELLOW;
+      context = (cstring) "";
+    } break;
   }
 
+  cstring it = (logLevel == LOG_INFO) ? "" : "()";
   SetConsoleTextAttribute(SConsole.hConsole, color);
   va_list args;
   va_start(args, Format);
-  snprintf(logBuffer, sizeof(logBuffer), "%s %s %s\n", logTag, Format, (Level == LOG_INFO) ? "" : Context);
+  snprintf(logBuffer, sizeof(logBuffer), "%s%s%s %s %s\n", logTag, funcName, it, Format, context);
   vprintf(logBuffer, args);
   va_end(args);
   SetConsoleTextAttribute(SConsole.hConsole, SConsole.defaultAttribute);

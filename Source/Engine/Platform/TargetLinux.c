@@ -44,6 +44,7 @@ void PEngineShutdown() {
 void PEngineBeginFrame() {
   SFrameStartTime = PEngineGetTime();
   GEngine.windowApi.OnWindowUpdate();
+  RClearBuffers();
 }
 
 void PEngineEndFrame() {

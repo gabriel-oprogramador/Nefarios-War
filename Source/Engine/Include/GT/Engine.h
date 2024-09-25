@@ -66,12 +66,16 @@ ENGINE_API void PModuleLoadApi(void* Module, void* Api, cstring* Names, bool bDe
 
 // Memory
 ENGINE_API void PMemFree(void* Data);
-ENGINE_API void* PMemAlloc(uint64 Size);
+ENGINE_API void* PMemMalloc(uint64 Size);
 ENGINE_API void* PMemCalloc(uint32 Count, uint64 Size);
 ENGINE_API void* PMemRealloc(void* Data, uint64 Size);
 ENGINE_API void* PMemCopy(void* Dest, void* Src, uint64 Size);
 ENGINE_API void* PMemMove(void* Dest, void* Src, uint64 Size);
 ENGINE_API void* PMemSet(void* Data, int32 Value, uint64 Size);
+
+// Files
+ENGINE_API bool PReadTextFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize);
+ENGINE_API bool PReadBinaryFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize);
 
 #define MOUSE_LEFT_CODE     0b0001  // 0x1 D1
 #define MOUSE_MIDDLE_CODE   0b0010  // 0x2 D2

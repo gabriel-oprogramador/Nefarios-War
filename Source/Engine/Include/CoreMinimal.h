@@ -3,6 +3,7 @@
 /*Original Project by Gabriel Oliveira Prudente @gabriel_Oprogramador*/
 
 #include <stdarg.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,23 +22,32 @@
 #define FORCE_INLINE static inline
 #endif  // _MSC_VER
 
-ENGINE_API void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...);
+ENGINE_API void EnginePrintLog(ELogLevel Level, cstring FuncName, cstring Context, cstring Format, ...);
 
 #define NO_EXPAND(a)                   #a
 #define STR(a)                         NO_EXPAND(a)
+#define CONCAT(A, B)                   A##B
 #define FIND_CONFIG(ConfigPath)        STR(CONFIG_PATH) ConfigPath
 #define FIND_ASSET(AssetPath)          STR(CONTENT_PATH) AssetPath
+#define FN_LOG                         __func__
 #define CONTEXT_LOG                    "-> " STR(__FILE__) ":" STR(__LINE__)
 #define BUFFER_SMALL                   256
 #define BUFFER_LOG_SIZE                2048
-#define GT_LOG(Level, Format, ...)     EnginePrintLog(Level, CONTEXT_LOG, Format, ##__VA_ARGS__)
-#define GT_LOGTEMP(Level, Format, ...) EnginePrintLog((ELogLevel)((1 << 16) | Level), CONTEXT_LOG, Format, ##__VA_ARGS__)
+#define GT_LOG(Level, Format, ...)     EnginePrintLog(Level, FN_LOG, CONTEXT_LOG, Format, ##__VA_ARGS__)
+#define GT_LOGTEMP(Level, Format, ...) EnginePrintLog((ELogLevel)((1 << 16) | Level), FN_LOG, CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define FCOLOR_GL(FCOLOR)              FCOLOR.r, FCOLOR.g, FCOLOR.b, FCOLOR.a
+#define FCOLOR_IS_EQUAL(C1, C2)        (C1.r == C2.r && C1.g == C2.g && C1.b == C2.b && C1.a == C2.a)
+#define CONFIG_DIR "Config/"
+#define CONTENT_DIR "Content/"
 
 #if defined(__cplusplus)
 #define CLITERAL(type) type
 #else
 #define CLITERAL(type) (type)
+#endif
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
 
 // clang-format off

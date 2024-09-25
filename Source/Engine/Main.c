@@ -1,5 +1,6 @@
 #include "GT/Engine.h"
 #include "GameModule.h"
+#include "Renderer.h"
 
 // Engine primary systems.
 extern void FInputUpdate(float DeltaTime);
@@ -14,6 +15,8 @@ static float deltaTime = 0.f;
 int GTmain(int argc, const char** argv) {
   PEngineProcess(0, argv);
   PEngineInitialize(800, 600, STR(GAME_NAME));
+  RRendererInitialize();
+
   PEngineSetTargetFPS(60);
   GameInit();
 
@@ -32,6 +35,7 @@ int GTmain(int argc, const char** argv) {
     PEngineEndFrame();
   }
   GameStop();
+  RRendererTerminate();
   PEngineTerminate();
 
   return 0;

@@ -8,6 +8,7 @@ public:
   virtual void Tick(float DeltaTime);
   virtual void EndPlay();
 private:
+  RPrimitive quad;
   FColor m_colorNormal;
   FColor m_colorFullscreen;
   bool m_bFullscreen;

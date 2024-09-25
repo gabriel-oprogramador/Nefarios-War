@@ -9,6 +9,35 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 typedef const char* cstring;
+typedef uint32 RShader;
+
+typedef enum {
+  PS_QUAD,
+  PS_CIRCLE,
+} EPrimitiveShape;
+
+typedef enum {
+  IM_GAME_ONLY,
+  IM_UI_ONLY,
+  IM_GAME_UI,
+  IM_EDITOR_ONLY
+} EInputMode;
+
+typedef enum {
+  LOG_INFO = (1 << 0),
+  LOG_SUCCESS = (1 << 1),
+  LOG_WARNING = (1 << 2),
+  LOG_ERROR = (1 << 3),
+  LOG_FATAL = (1 << 4),
+  LOG_ALERT = (1 << 5),
+} ELogLevel;
+
+typedef struct{
+  EPrimitiveShape shape;
+  uint32 uColorID;
+  uint32 objectID;
+  uint32 indices;
+} RPrimitive;
 
 typedef struct {
   float r;
@@ -16,6 +45,13 @@ typedef struct {
   float b;
   float a;
 } FColor;
+
+typedef struct {
+  float x;
+  float y;
+  float width;
+  float height;
+} FRect;
 
 typedef struct {
   float x;
@@ -43,24 +79,9 @@ typedef struct {
   float roll;
 } FRotator;
 
-typedef struct{
+typedef struct {
   float e[4][4];
 } FMat4;
-
-typedef enum {
-  IM_GAME_ONLY,
-  IM_UI_ONLY,
-  IM_GAME_UI,
-  IM_EDITOR_ONLY
-} EInputMode;
-
-typedef enum {
-  LOG_INFO = (1 << 0),
-  LOG_SUCCESS = (1 << 1),
-  LOG_WARNING = (1 << 2),
-  LOG_ERROR = (1 << 3),
-  LOG_FATAL = (1 << 4),
-} ELogLevel;
 
 typedef enum {
   KEY_APOSTROPHE,            // Key: '
