@@ -1,5 +1,6 @@
 #ifdef PLATFORM_LINUX
 #include "GT/Engine.h"
+#include "Renderer.h"
 
 #include <math.h>
 #include <dlfcn.h>
@@ -151,49 +152,113 @@ void* PMemMove(void* Dest, void* Src, uint64 Size) {
   return memmove(Dest, Src, Size);
 }
 
-void* PMemSet(void* Data, int32 Value, uint64 Size){
+void* PMemSet(void* Data, int32 Value, uint64 Size) {
   return memset(Data, Value, Size);
 }
 
-void EnginePrintLog(ELogLevel Level, cstring Context, cstring Format, ...) {
+// Files
+bool PReadTextFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize) {
+  FILE* file = fopen(Path, "r");
+  if(file == NULL) {
+    cstring path = strstr(Path, STR(GAME_NAME));
+    path = (path == NULL) ? Path : path;
+    GT_LOG(LOG_ALERT, "Does not exist -> %s", path);
+    return false;
+  }
+
+  fseek(file, 0, SEEK_END);
+  uint64 size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  if(FileSize != NULL) *FileSize = (size + ExtraSize);
+
+  *Buffer = PMemCalloc(1, size + ExtraSize + 1);
+
+  fread(*Buffer, 1, size, file);
+  (*Buffer)[size + ExtraSize] = '\0';
+
+  fclose(file);
+  return true;
+}
+
+bool PReadBinaryFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize) {
+  FILE* file = fopen(Path, "rb");
+  if(file == NULL) {
+    cstring path = strstr(Path, STR(GAME_NAME));
+    path = (path == NULL) ? Path : path;
+    GT_LOG(LOG_ALERT, "Does not exist -> %s", path);
+    return false;
+  }
+
+  fseek(file, 0, SEEK_END);
+  uint64 size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  if(FileSize != NULL) *FileSize = (size + ExtraSize);
+
+  *Buffer = PMemCalloc(1, size + ExtraSize);
+
+  uint64 readBytes = fread(*Buffer, 1, size, file);
+
+  if(size != readBytes) {
+    GT_LOG(LOG_ALERT, "Didn't read everything! %llu/%llu -> %s", readBytes, size, Path);
+    fclose(file);
+    return false;
+  }
+
+  fclose(file);
+  return true;
+}
+
+void EnginePrintLog(ELogLevel Level, cstring FuncName, cstring Context, cstring Format, ...) {
   static char logBuffer[BUFFER_LOG_SIZE] = {""};
   static cstring logTag = NULL;
   static cstring logColor = NULL;
+  cstring context = Context;
+  cstring funcName = FuncName;
   bool bIsFast = (Level >> 16);
   uint16 logLevel = Level & 0xFFFF;
 
   switch(logLevel) {
     case LOG_INFO: {
       logColor = (cstring) "\033[0;97m";
-      logTag = (cstring) "[LOG INFO] =>";
+      logTag = (cstring) "[LOG INFO] => ";
+      funcName = (cstring) "";
+      context = (cstring) "";
     } break;
     case LOG_SUCCESS: {
       logColor = (cstring) "\033[0;92m";
-      logTag = (cstring) "[LOG SUCCESS] =>";
+      logTag = (cstring) "[LOG SUCCESS] => ";
     } break;
     case LOG_WARNING: {
       logColor = (cstring) "\033[0;93m";
-      logTag = (cstring) "[LOG WARNING] =>";
+      logTag = (cstring) "[LOG WARNING] => ";
     } break;
     case LOG_ERROR: {
       logColor = (cstring) "\033[0;91m";
-      logTag = (cstring) "[LOG ERROR] =>";
+      logTag = (cstring) "[LOG ERROR] => ";
     } break;
     case LOG_FATAL: {
       logColor = (cstring) "\033[0;31m";
-      logTag = (cstring) "[LOG FATAL] =>";
+      logTag = (cstring) "[LOG FATAL] => ";
+    } break;
+    case LOG_ALERT: {
+      logColor = (cstring) "\033[0;33m";
+      logTag = (cstring) "[LOG ALERT] => ";
+      context = (cstring) "";
     } break;
   }
 
+  cstring it = (logLevel == LOG_INFO) ? "" : "() ";
   va_list args;
   va_start(args, Format);
-  snprintf(logBuffer, sizeof(logBuffer), "%s %s %s %s\033[0m\n", logColor, logTag, Format, (logLevel == LOG_INFO) ? "" : Context);
+  snprintf(logBuffer, sizeof(logBuffer), "%s%s%s%s%s %s\033[0m\n", logColor, logTag, funcName, it, Format, context);
   vprintf(logBuffer, args);
   va_end(args);
 
   if(SLogFile != NULL && bIsFast != 1) {
     va_start(args, Format);
-    snprintf(logBuffer, sizeof(logBuffer), "%s %s %s\n", logTag, Format, (logLevel == LOG_INFO) ? "" : Context);
+    snprintf(logBuffer, sizeof(logBuffer), "%s%s%s%s %s\n", logTag, funcName, it, Format, context);
     vfprintf(SLogFile, logBuffer, args);
     va_end(args);
   }

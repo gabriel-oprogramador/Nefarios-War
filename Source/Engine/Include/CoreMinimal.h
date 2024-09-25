@@ -37,8 +37,8 @@ ENGINE_API void EnginePrintLog(ELogLevel Level, cstring FuncName, cstring Contex
 #define GT_LOGTEMP(Level, Format, ...) EnginePrintLog((ELogLevel)((1 << 16) | Level), FN_LOG, CONTEXT_LOG, Format, ##__VA_ARGS__)
 #define FCOLOR_GL(FCOLOR)              FCOLOR.r, FCOLOR.g, FCOLOR.b, FCOLOR.a
 #define FCOLOR_IS_EQUAL(C1, C2)        (C1.r == C2.r && C1.g == C2.g && C1.b == C2.b && C1.a == C2.a)
-#define CONFIG_DIR "Config/"
-#define CONTENT_DIR "Content/"
+#define CONFIG_DIR                     "Config/"
+#define CONTENT_DIR                    "Content/"
 
 #if defined(__cplusplus)
 #define CLITERAL(type) type
