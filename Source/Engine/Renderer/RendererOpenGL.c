@@ -121,6 +121,14 @@ RShader RShaderLoad(cstring VertexPath, cstring FragmentPath) {
 
   RShader shaderProgram = RShaderCreate(vsBuffer, fsBuffer);
 
+  PMemFree(vsBuffer);
+  PMemFree(fsBuffer);
+
+  if(shaderProgram == SDefaultShader) {
+    GT_LOG(LOG_INFO, "API:OPENGL Use Default Shader Program");
+    return SDefaultShader;
+  }
+
   GT_LOG(LOG_INFO, "API:OPENGL Loaded Shader Program => %s | %s", vs, fs);
   return shaderProgram;
 }
