@@ -2,24 +2,26 @@
 #include "CoreMinimal.h"
 
 /*==================/ Input Manager /===================*/
-ENGINE_API void FInputSetMode(EInputMode InputMode);
-ENGINE_API EInputMode FInputGetMode();
-
-ENGINE_API bool FInputIsPressed(uchar KeyCode);
-ENGINE_API bool FInputIsRelease(uchar KeyCode);
-ENGINE_API bool FInputIsRepeat(uchar KeyCode);
-ENGINE_API float FInputGetMouseX();
-ENGINE_API float FInputGetMouseY();
-
-ENGINE_API void FInputSetCursorPos(FVector2 NewPosition);
-ENGINE_API FVector2 FInputGetCursorPos();
-
-ENGINE_API bool FInputIsCursorShow();
-ENGINE_API void FInputShowCursor(bool bShow);
-
-ENGINE_API bool FInputIsCursorCaptured();
-ENGINE_API void FInputCaptureCursor(bool bCapture);
+ENGINE_API bool FIsKeyPressed(uchar KeyCode);
+ENGINE_API bool FIsKeyRelease(uchar KeyCode);
+ENGINE_API bool FIsKeyRepeat(uchar KeyCode);
+ENGINE_API float FGetMouseX();
+ENGINE_API float FGetMouseY();
+ENGINE_API FVector2 FGetMousePos();
+ENGINE_API void FSetMousePos(FVector2 NewPosition);
+ENGINE_API void FCaptureMouse(bool bCapture);
 
 /*==================/ Timer Manager /===================*/
-ENGINE_API double FTimerGetDeltaTime();
-ENGINE_API uint32 FTimerGetFrameRate();
+ENGINE_API double FGetDeltaTime();
+ENGINE_API uint32 FGetFrameRate();
+ENGINE_API void FSetTargetFPS(uint32 Target);
+
+/*==================/ Window Manager /===================*/
+ENGINE_API void FInitWindow(int32 Width, int32 Height, cstring Title);
+ENGINE_API void FCloseWindow();
+ENGINE_API FVector2 FGetMonitorSize();
+ENGINE_API FVector2 FGetWindowSize();
+ENGINE_API void FSetWindowSize(FVector2 Size);
+ENGINE_API void FSetWindowMode(EWindowMode Mode);
+ENGINE_API EWindowMode FGetWindowMode();
+ENGINE_API void FToggleFullscreen();

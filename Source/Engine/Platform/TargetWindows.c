@@ -1,99 +1,45 @@
+#include "CoreMinimal.h"
 #ifdef PLATFORM_WINDOWS
 #include <windows.h>
-#include <math.h>
 
 #include "GT/Engine.h"
-#include "Renderer.h"
 
-FGT GEngine;
-
-extern bool ApiWin32Init(IWindowApi* WindowApi);
-extern void ApiGdiSwapBuffer();
-
-static FILE* SLogFile = NULL;
-static cstring SLogFilePath = "LogFile.txt";
-static double SFrameStartTime = 0;
-static LARGE_INTEGER STimeFrequency;
+extern bool ApiWin32Init(IWindowApi* Api);
+extern bool ApiWglInit(IGraphicApi* Api);
 
 static struct {
   HANDLE hConsole;
-  int32 defaultAttribute;
-} SConsole;
+  int32 consoleDefaultAttribute;
+  LARGE_INTEGER timerFrequency;
+  FILE* logFile;
+} SWinOS;
 
-static void InitWin32Console() {
-  GEngine.windowApi.bShouldClose = true;
-  SConsole.hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+void PPlatformInitialize() {
+  QueryPerformanceFrequency(&SWinOS.timerFrequency);
+  SWinOS.hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO consoleScreenInfo;
-  GetConsoleScreenBufferInfo(SConsole.hConsole, &consoleScreenInfo);
-  SConsole.defaultAttribute = consoleScreenInfo.wAttributes;
-}
+  GetConsoleScreenBufferInfo(SWinOS.hConsole, &consoleScreenInfo);
+  SWinOS.consoleDefaultAttribute = consoleScreenInfo.wAttributes;
+  SWinOS.logFile = fopen(GT_LOG_FILE_PATH, "w");
 
-bool PEngineProcess(uint64 Flags, cstring* Args) {
-  return false;
-}
-
-void PEngineInitialize(int32 Width, int32 Height, cstring Title) {
-  QueryPerformanceFrequency(&STimeFrequency);
-  GEngine.timerApi.engineStartTime = (float)PEngineGetTime();
-  GEngine.windowApi.bShowCursor = true;  // It is necessary to start as true to avoid bugs with WinApi
-  InitWin32Console();
-  fopen_s(&SLogFile, SLogFilePath, "w");
   if(ApiWin32Init(&GEngine.windowApi)) {
-    GEngine.windowApi.OnWindowCreate(Width, Height, Title);
-  }
-}
-
-void PEngineTerminate() {
-  GEngine.windowApi.OnWindowDestroy();
-}
-
-bool PEngineShouldClose() {
-  return GEngine.windowApi.bShouldClose;
-}
-
-void PEngineShutdown() {
-  GEngine.windowApi.bShouldClose = true;
-}
-
-void PEngineBeginFrame() {
-  SFrameStartTime = PEngineGetTime();
-  GEngine.windowApi.OnWindowUpdate();
-  RClearBuffers();
-}
-
-void PEngineEndFrame() {
-  ApiGdiSwapBuffer();
-  double end = PEngineGetTime();
-  double delta = end - SFrameStartTime;
-  double target = GEngine.timerApi.frameTime;
-  double remainingTime = target - delta;
-
-  if(target > 0) {
-    if(remainingTime > (delta * 0.9)) {
-      PEngineWait(remainingTime);
+    if(ApiWglInit(&GEngine.graphicApi)) {
+      // Bla bla
     }
-    while((delta = PEngineGetTime() - SFrameStartTime) < target) {}
+    return;
   }
-
-  GEngine.timerApi.deltaTime = delta;
-  GEngine.timerApi.frameRate = (uint32)ceil(1.f / delta);
 }
 
-void PEngineFullscreen(bool bFullscreen) {
-  GEngine.windowApi.OnWindowFullscreen(bFullscreen);
+void PPlatformTerminate() {
 }
 
-double PEngineGetTime() {
+double PGetTime() {
   LARGE_INTEGER counter;
   QueryPerformanceCounter(&counter);
-  return (double)(counter.QuadPart) / STimeFrequency.QuadPart;
+  return (double)(counter.QuadPart) / SWinOS.timerFrequency.QuadPart;
 }
 
-void PEngineSetTargetFPS(uint32 Target) {
-  GEngine.timerApi.frameTime = 1.f / Target;
-}
-
-void PEngineWait(double Milliseconds) {
+void PWait(double Milliseconds) {
   Sleep((DWORD)Milliseconds);
 }
 
@@ -164,7 +110,7 @@ void* PMemSet(void* Data, int32 Value, uint64 Size) {
 }
 
 // Files
-bool PReadTextFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize) {
+bool PReadTextFile(cstring Path, char** OutBuffer, uint64* FileSize, uint64 ExtraSize) {
   FILE* file = fopen(Path, "r");
   if(file == NULL) {
     cstring path = strstr(Path, STR(GAME_NAME));
@@ -179,16 +125,16 @@ bool PReadTextFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSi
 
   if(FileSize != NULL) *FileSize = (size + ExtraSize);
 
-  *Buffer = PMemCalloc(1, size + ExtraSize + 1);
+  *OutBuffer = PMemCalloc(1, size + ExtraSize + 1);
 
-  fread(*Buffer, 1, size, file);
-  (*Buffer)[size + ExtraSize] = '\0';
+  fread(*OutBuffer, sizeof(char), size, file);
+  (*OutBuffer)[size + ExtraSize] = '\0';
 
   fclose(file);
   return true;
 }
 
-bool PReadBinaryFile(cstring Path, char** Buffer, uint64* FileSize, uint64 ExtraSize) {
+bool PReadBinaryFile(cstring Path, char** OutBuffer, uint64* FileSize, uint64 ExtraSize) {
   FILE* file = fopen(Path, "rb");
   if(file == NULL) {
     cstring path = strstr(Path, STR(GAME_NAME));
@@ -203,9 +149,9 @@ bool PReadBinaryFile(cstring Path, char** Buffer, uint64* FileSize, uint64 Extra
 
   if(FileSize != NULL) *FileSize = (size + ExtraSize);
 
-  *Buffer = PMemCalloc(1, size + ExtraSize);
+  *OutBuffer = PMemCalloc(1, size + ExtraSize);
 
-  uint64 readBytes = fread(*Buffer, 1, size, file);
+  uint64 readBytes = fread(*OutBuffer, sizeof(char), size, file);
 
   if(size != readBytes) {
     GT_LOG(LOG_ALERT, "Didn't read everything! %llu/%llu -> %s", readBytes, size, Path);
@@ -214,6 +160,47 @@ bool PReadBinaryFile(cstring Path, char** Buffer, uint64* FileSize, uint64 Extra
   }
 
   fclose(file);
+  return true;
+}
+
+bool PWriteTextFile(cstring Path, const char* InBuffer, bool bAppend) {
+  cstring mode = (bAppend) ? "a" : "w";
+  FILE* file = fopen(Path, mode);
+  if(file == NULL) {
+    GT_LOG(LOG_ALERT, "File not exist -> %s", Path);
+    return false;
+  }
+  if(InBuffer == NULL) {
+    GT_LOG(LOG_ALERT, "InBuffer is NULL -> %s", Path);
+    fclose(file);
+    return false;
+  }
+
+  fputs(InBuffer, file);
+  fclose(file);
+  return true;
+}
+
+bool PWriteBinaryFile(cstring Path, const char* InBuffer, uint64 Size, bool bAppend) {
+  cstring mode = (bAppend) ? "ab" : "wb";
+  FILE* file = fopen(Path, mode);
+  if(file == NULL) {
+    GT_LOG(LOG_ALERT, "File not exist -> %s", Path);
+    return false;
+  }
+  if(InBuffer == NULL) {
+    GT_LOG(LOG_ALERT, "InBuffer is NULL -> %s", Path);
+    fclose(file);
+    return false;
+  }
+
+  if(fwrite(InBuffer, sizeof(char), Size, file) != Size) {
+    GT_LOG(LOG_ALERT, "Writing not completed.");
+    fclose(file);
+    return false;
+  }
+  fclose(file);
+
   return true;
 }
 
@@ -266,20 +253,21 @@ void EnginePrintLog(ELogLevel Level, cstring FuncName, cstring Context, cstring 
     } break;
   }
 
-  cstring it = (logLevel == LOG_INFO) ? "" : "()";
-  SetConsoleTextAttribute(SConsole.hConsole, color);
+  cstring isFunc = (logLevel == LOG_INFO) ? "" : "()";
+  cstring isSpace = (logLevel != LOG_INFO) ? " " : "";
+  SetConsoleTextAttribute(SWinOS.hConsole, color);
   va_list args;
   va_start(args, Format);
-  snprintf(logBuffer, sizeof(logBuffer), "%s%s%s %s %s\n", logTag, funcName, it, Format, context);
+  snprintf(logBuffer, sizeof(logBuffer), "%s%s%s%s %s %s\n", logTag, isSpace, funcName, isFunc, Format, context);
   vprintf(logBuffer, args);
   va_end(args);
-  SetConsoleTextAttribute(SConsole.hConsole, SConsole.defaultAttribute);
+  SetConsoleTextAttribute(SWinOS.hConsole, SWinOS.consoleDefaultAttribute);
 
-  if(SLogFile != NULL && bIsFast != 1) {
+  if(SWinOS.logFile != NULL && bIsFast != 1) {
     va_start(args, Format);
-    vfprintf(SLogFile, logBuffer, args);
+    vfprintf(SWinOS.logFile, logBuffer, args);
+    fflush(SWinOS.logFile);
     va_end(args);
   }
 }
-
 #endif  // PLATFORM_WINDOWS

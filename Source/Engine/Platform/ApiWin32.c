@@ -1,16 +1,23 @@
+#include "CoreMinimal.h"
+
 #ifdef PLATFORM_WINDOWS
 #include <windows.h>
 #include <windowsx.h>
-
+#include "GT/Platform.h"
 #include "GT/Engine.h"
+#include "GT/Renderer.h"
 
-#define CODE_WINDOW_CLOSE WM_USER + 1
+static void* SLibUser = NULL;
+static const uint32 CODE_WINDOW_CLOSE = WM_USER + 1;
+static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+static void InternalSetWindowTitle();
+static void InternalUpdateKey(uint64 KeyCode, bool bIsPressed);
 
-extern HGLRC ApiWglInit(HWND Window, HDC Device, int32 Major, int32 Minor, int32 ColorBits, int32 DepthBits);
-
-static void* SLibUser32 = NULL;
-
-static const char* SLibUser32Names[] = {
+static const char* SLibUserNames[] = {
+    "GetMonitorInfoA",
+    "MonitorFromWindow",
+    "GetForegroundWindow",
+    "ReleaseDC",
     "EnumDisplaySettingsA",
     "ChangeDisplaySettingsA",
     "SetCursorPos",
@@ -44,6 +51,10 @@ static const char* SLibUser32Names[] = {
 
 // clang-format off
 static struct {
+  int (*GetMonitorInfoA)(HMONITOR hMonitor, LPMONITORINFO lpmi);
+  HMONITOR (*MonitorFromWindow)(HWND hwnd, DWORD dwFlags);
+  HWND (*GetForegroundWindow)();
+  int (*ReleaseDC)(HWND hWnd, HDC hDC);
   BOOL (*EnumDisplaySettingsA)(LPCSTR lpszDeviceName, DWORD iModeNum, DEVMODE *lpDevMode);
   LONG (*ChangeDisplaySettingsA)(DEVMODE *lpDevMode, DWORD dwFlags);
   BOOL (*SetCursorPos)(int X, int Y);
@@ -73,78 +84,187 @@ static struct {
   BOOL(*GetClassInfoExA) (HINSTANCE hInstance, LPCSTR lpszClass, LPWNDCLASSEXA lpwcx);
   HDC (*GetDC) (HWND hWnd);
   HWND (*CreateWindowExA) (DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
-} SApiUser32;
+} SApiUser;
 // clang-format on
 
-static struct {
-  WINDOWPLACEMENT placement;
-  LONG_PTR style;
-  HWND window;
-  HGLRC context;
-  HDC device;
-} SWindow;
+void ApiWin32CreateWindow(int32 Width, int32 Height, cstring Title, uint32 Mode) {
+  cstring className = "GameWindow";
+  HINSTANCE hInstance = GetModuleHandleA(NULL);
+  uint32 style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+  WNDCLASSEXA wc = {0};
 
-static void InternalUpdateWindowTitle();
-static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-static void InternalUpdateKey(uint64 KeyCode, bool bIsPressed);
+  if(!SApiUser.GetClassInfoExA(hInstance, className, &wc)) {
+    wc.cbSize = sizeof(WNDCLASSEXA);
+    wc.style = CS_OWNDC;
+    wc.lpfnWndProc = &InternalWinProc;
+    wc.hInstance = hInstance;
+    wc.hIcon = SApiUser.LoadIconA(NULL, IDI_APPLICATION);
+    wc.hCursor = SApiUser.LoadCursorA(NULL, IDC_ARROW);
+    wc.lpszClassName = className;
 
-// Functions to assist in creating the dummy window for WGL Api.
-HWND ApiWin32CreateWindow(int32 Width, int32 Height, cstring Title);
-void ApiWin32DestroyWindow(HWND Window);
-HDC ApiWin32GetDC(HWND Window);
+    if(!SApiUser.RegisterClassExA(&wc)) {
+      GT_LOG(LOG_FATAL, "API-WIN32: Not register class window");
+      exit(1);  // Exit Program
+    }
+  }
 
-void ApiWin32WindowCreate(int32 Width, int32 Height, cstring Title) {
-  SWindow.window = ApiWin32CreateWindow(Width, Height, Title);
-  SWindow.device = ApiWin32GetDC(SWindow.window);
-  // TODO: Never use magic numbers!
-  SWindow.context = ApiWglInit(SWindow.window, SWindow.device, 3, 3, 32, 24);
-  GEngine.windowApi.width = Width;
-  GEngine.windowApi.height = Height;
-  GEngine.windowApi.title = Title;
-  GEngine.windowApi.bFullscreen = false;
-  GEngine.windowApi.bShouldClose = false;
-  GT_LOG(LOG_INFO, "API:WIN32 Created Window => Width:%d Height:%d Title:%s", Width, Height, Title);
+  HWND hWin = SApiUser.CreateWindowExA(0, className, Title, style, CW_USEDEFAULT, CW_USEDEFAULT, Width, Height, NULL, NULL, hInstance, NULL);
+  if(hWin == NULL) {
+    GT_LOG(LOG_FATAL, "API-WIN32: Not create game window");
+    exit(1);  // Exit Program
+  }
+
+  GEngine.mainWindow.width = Width;
+  GEngine.mainWindow.height = Height;
+  GEngine.mainWindow.title = Title;
+  GEngine.mainWindow.bShouldClose = false;
+  GEngine.mainWindow.bFullscreen = false;
+  GEngine.mainWindow.bShowCursor = true;
+  GEngine.mainWindow.bCursorCaptured = false;
+  GEngine.mainWindow.pWindow = (void*)hWin;
+  GEngine.mainWindow.pDevice = (void*)SApiUser.GetDC(hWin);
+  GEngine.mainWindow.pContext = NULL;
+  GEngine.windowApi.OnSetMode(Mode);
+  GEngine.windowApi.OnSetSize(Width, Height);
 }
 
-void ApiWin32WindowUpdate() {
+void ApiWin32UpdateWindow() {
+  MSG msg;
 #ifdef DEBUG_MODE
-  InternalUpdateWindowTitle();
+  InternalSetWindowTitle();
 #endif  // DEBUG_MODE
 
-  MSG msg;
-  memcpy(GEngine.inputApi.previousKeys, GEngine.inputApi.currentKeys, sizeof(GEngine.inputApi.previousKeys));
-  InternalUpdateKey(MOUSE_FORWARD_CODE, false);
-  InternalUpdateKey(MOUSE_BACKWARD_CODE, false);
-
-  while(SApiUser32.PeekMessageA(&msg, SWindow.window, 0, 0, PM_REMOVE)) {
+  PMemCopy(GEngine.inputApi.previousKeys, GEngine.inputApi.currentKeys, KEY_MAX);
+  while(SApiUser.PeekMessageA(&msg, (HWND)GEngine.mainWindow.pWindow, 0, 0, PM_REMOVE)) {
     if(msg.message == CODE_WINDOW_CLOSE) {
-      GEngine.windowApi.bShouldClose = true;
+      FEngineShutdown();
       return;
     }
-    SApiUser32.TranslateMessage(&msg);
-    SApiUser32.DispatchMessageA(&msg);
+    SApiUser.TranslateMessage(&msg);
+    SApiUser.DispatchMessageA(&msg);
   }
 }
 
-void ApiWin32WindowDestroy() {
-  GT_LOG(LOG_INFO, "API:WIN32 Closed Window");
-  ApiWin32DestroyWindow(SWindow.window);
+void ApiWin32DestroyWindow() {
+  HWND win = (HWND)GEngine.mainWindow.pWindow;
+  HDC dc = (HDC)GEngine.mainWindow.pDevice;
+  SApiUser.ReleaseDC(win, dc);
+  SApiUser.DestroyWindow(win);
+  GEngine.mainWindow.pWindow = NULL;
+  GEngine.mainWindow.pDevice = NULL;
+  GEngine.mainWindow.bShouldClose = true;
 }
 
-static void InternalUpdateWindowTitle() {
-  char buffer[BUFFER_SMALL] = "";
-  cstring title = GEngine.windowApi.title;
-  double deltaTime = GEngine.timerApi.deltaTime;
-  uint32 frameRate = GEngine.timerApi.frameRate;
-  snprintf(buffer, BUFFER_SMALL, "%s (Debug Mode) => FPS:%u | MS:%f", title, frameRate, deltaTime);
-  SApiUser32.SetWindowTextA(SWindow.window, buffer);
+bool ApiWin32WindowIsFocused() {
+  bool retVal = (void*)SApiUser.GetForegroundWindow() == GEngine.mainWindow.pWindow;
+  return retVal;
 }
 
+void ApiWin32SetWindowSize(int32 Width, int32 Height) {
+  HWND win = GEngine.mainWindow.pWindow;
+  RECT winRect = {(LONG)0, (LONG)0, (LONG)Width, (LONG)Height};
+  LONG_PTR style = SApiUser.GetWindowLongPtrA(win, GWL_STYLE);
+
+  if(!SApiUser.AdjustWindowRect(&winRect, style, FALSE)) {
+    GT_LOG(LOG_ERROR, "API-WIN32: No adjust window rect");
+  }
+
+  int32 winWidth = winRect.right - winRect.left;
+  int32 winHeight = winRect.bottom - winRect.top;
+
+  SApiUser.SetWindowPos(win, HWND_TOP, 0, 0, winWidth, winHeight, SWP_NOMOVE | SWP_NOZORDER);
+}
+
+void ApiWin32SetWindowMode(uint32 WindowMode) {
+  HWND win = (HWND)GEngine.mainWindow.pWindow;
+  LONG_PTR flag = WS_VISIBLE;
+
+  switch(WindowMode) {
+    case WINDOW_MODE_FIXED: {
+      flag |= WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+    } break;
+    case WINDOW_MODE_RESIZABLE: {
+      flag |= WS_OVERLAPPEDWINDOW;
+      SApiUser.SetWindowLongPtrA(win, GWL_STYLE, flag);
+    } break;
+  }
+  SApiUser.SetWindowLongPtrA(win, GWL_STYLE, flag);
+  GEngine.windowApi.OnSetSize(GEngine.mainWindow.width, GEngine.mainWindow.height);
+  GEngine.mainWindow.windowMode = WindowMode;
+}
+
+void ApiWin32SetFullscreen(bool bFullscreen) {
+  if(GEngine.mainWindow.bFullscreen == bFullscreen) {
+    return;
+  }
+  GEngine.mainWindow.bFullscreen = bFullscreen;
+  HWND win = GEngine.mainWindow.pWindow;
+  static LONG_PTR style;
+  static WINDOWPLACEMENT placement = {sizeof(WINDOWPLACEMENT)};
+
+  if(bFullscreen) {
+    DEVMODE dm;
+    memset(&dm, 0, sizeof(DEVMODE));
+    SApiUser.EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    SApiUser.ChangeDisplaySettingsA(&dm, CDS_FULLSCREEN);
+    SApiUser.GetWindowPlacement(win, &placement);
+    style = SApiUser.GetWindowLongPtrA(win, GWL_STYLE);
+
+    SApiUser.SetWindowLongPtrA(win, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+    uint32 mask = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
+    SApiUser.SetWindowPos(win, NULL, 0, 0, dm.dmPelsWidth, dm.dmPelsHeight, mask);
+
+  } else {
+    SApiUser.SetWindowLongPtrA(win, GWL_STYLE, style);
+    SApiUser.SetWindowPlacement(win, &placement);
+    SApiUser.ChangeDisplaySettingsA(NULL, 0);
+  }
+}
+
+void ApiWin32SetCursorPos(uint32 X, uint32 Y) {
+  POINT point = {X, Y};
+  SApiUser.ClientToScreen((HWND)GEngine.mainWindow.pWindow, &point);
+  SApiUser.SetCursorPos(point.x, point.y);
+}
+
+void ApiWin32ShowCursor(bool bShow) {
+  SApiUser.ShowCursor(bShow);
+}
+
+// Internal Functions
 static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
+  static bool bCursorLocked = false;
   switch(Msg) {
     case WM_CLOSE: {
-      SApiUser32.PostMessageA(hWnd, CODE_WINDOW_CLOSE, 0, 0);
+      SApiUser.PostMessageA(hWnd, CODE_WINDOW_CLOSE, 0, 0);
     } break;
+
+    case WM_SETFOCUS: {
+      if(bCursorLocked) {
+        GEngine.mainWindow.bCursorCaptured = true;
+      }
+    } break;
+    case WM_KILLFOCUS: {
+      bCursorLocked = GEngine.mainWindow.bCursorCaptured;
+      GEngine.mainWindow.bCursorCaptured = false;
+    } break;
+
+    case WM_SIZE: {
+      GEngine.mainWindow.width = LOWORD(lParam);
+      GEngine.mainWindow.height = HIWORD(lParam);
+      if(GEngine.mainWindow.pContext != NULL) {
+        FRect viewport = {0, 0, LOWORD(lParam), HIWORD(lParam)};
+        FSetViewport(viewport);
+      }
+      HMONITOR monitor = SApiUser.MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+      MONITORINFO info;
+      info.cbSize = sizeof(MONITORINFO);
+      if(SApiUser.GetMonitorInfoA(monitor, &info)) {
+        GEngine.mainWindow.monitorWidth = info.rcMonitor.right - info.rcMonitor.left;
+        GEngine.mainWindow.monitorHeight = info.rcMonitor.bottom - info.rcMonitor.top;
+      }
+    } break;
+
     case WM_KEYDOWN: {
       InternalUpdateKey(wParam, true);
     } break;
@@ -185,64 +305,20 @@ static LRESULT InternalWinProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
       GEngine.inputApi.mousePosition[1] = (posX < 0) ? 0.f : posY;
     } break;
 
-    case WM_SIZE: {
-      GEngine.windowApi.width = LOWORD(lParam);
-      GEngine.windowApi.height = HIWORD(lParam);
-      // TODO:Adjust the GL Viewport.
-    } break;
-
     default: {
-      return SApiUser32.DefWindowProcA(hWnd, Msg, wParam, lParam);
+      return SApiUser.DefWindowProcA(hWnd, Msg, wParam, lParam);
     }
   }
 
   return 0;
 }
 
-void ApiWin32SetFullscreen(bool bFullscreen) {
-  GEngine.windowApi.bFullscreen = bFullscreen;
-
-  if(bFullscreen) {
-    DEVMODE dm;
-    memset(&dm, 0, sizeof(DEVMODE));
-    SApiUser32.EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &dm);
-    SApiUser32.ChangeDisplaySettingsA(&dm, CDS_FULLSCREEN);
-    SApiUser32.GetWindowPlacement(SWindow.window, &SWindow.placement);
-    SWindow.style = SApiUser32.GetWindowLongPtrA(SWindow.window, GWL_STYLE);
-
-    SApiUser32.SetWindowLongPtrA(SWindow.window, GWL_STYLE, WS_POPUP);
-    uint32 mask = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
-    SApiUser32.SetWindowPos(SWindow.window, HWND_TOP, 0, 0, dm.dmPelsWidth, dm.dmPelsHeight, mask);
-  } else {
-    SApiUser32.SetWindowLongPtrA(SWindow.window, GWL_STYLE, SWindow.style);
-    SApiUser32.SetWindowPlacement(SWindow.window, &SWindow.placement);
-    SApiUser32.ChangeDisplaySettingsA(NULL, 0);
-  }
-  SApiUser32.ShowWindow(SWindow.window, SW_SHOW);
-  SApiUser32.UpdateWindow(SWindow.window);
-}
-
-void ApiWin32ShowCursor(bool bShow) {
-  if(GEngine.windowApi.bShowCursor == bShow) {
-    return;
-  }
-  GEngine.windowApi.bShowCursor = bShow;
-  SApiUser32.ShowCursor(bShow);
-}
-
-void ApiWin32SetCursorPos(uint32 X, uint32 Y) {
-  RECT windowRect = {0};
-  POINT clientTopLeft = {0};
-
-  SApiUser32.GetWindowRect(SWindow.window, &windowRect);
-  SApiUser32.ClientToScreen(SWindow.window, &clientTopLeft);
-
-  uint32 borderOffsetX = clientTopLeft.x - windowRect.left;
-  uint32 borderOffsetY = clientTopLeft.y - windowRect.top;
-  uint32 xScreen = windowRect.left + borderOffsetX + X;
-  uint32 yScreen = windowRect.top + borderOffsetY + Y;
-
-  SApiUser32.SetCursorPos(xScreen, yScreen);
+static void InternalSetWindowTitle() {
+  static char buffer[BUFFER_SMALL] = "";
+  int32 frameRate = GEngine.timerApi.frameRate;
+  float deltaTime = GEngine.timerApi.deltaTime;
+  snprintf(buffer, sizeof(buffer), "%s (Debug Mode) => FPS:%d | MS:%f", GEngine.mainWindow.title, frameRate, deltaTime);
+  SApiUser.SetWindowTextA(GEngine.mainWindow.pWindow, buffer);
 }
 
 static void InternalUpdateKey(uint64 KeyCode, bool bIsPressed) {
@@ -367,67 +443,23 @@ static void InternalUpdateKey(uint64 KeyCode, bool bIsPressed) {
   }
 }
 
-// Function to assist in creating the dummy window for WGL Api.
-HWND ApiWin32CreateWindow(int32 Width, int32 Height, cstring Title) {
-  cstring windowClassName = "GameWindow";
-  HINSTANCE hInstance = GetModuleHandleA(NULL);
-  WNDCLASSEXA wc = {0};
-
-  if(!SApiUser32.GetClassInfoExA(hInstance, windowClassName, &wc)) {
-    wc.cbSize = sizeof(WNDCLASSEXA);
-    wc.style = CS_OWNDC;
-    wc.lpfnWndProc = &InternalWinProc;
-    wc.hInstance = hInstance;
-    wc.hIcon = SApiUser32.LoadIconA(NULL, IDI_APPLICATION);
-    wc.hCursor = SApiUser32.LoadCursorA(NULL, IDC_ARROW);
-    wc.lpszClassName = windowClassName;
-
-    if(!SApiUser32.RegisterClassExA(&wc)) {
-      GT_LOG(LOG_FATAL, "API:WIN32 Not Register Class Window");
-      exit(1);  // Exit Program
-    }
-  }
-
-  RECT winRect = {(LONG)0, (LONG)0, (LONG)Width, (LONG)Height};
-  if(!SApiUser32.AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE)) {
-    GT_LOG(LOG_ERROR, "API:WIN32 No Adjust Window Rect");
-  }
-
-  int32 winWidth = winRect.right - winRect.left;
-  int32 winHeight = winRect.bottom - winRect.top;
-  uint32 winStyle = WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE;
-  HWND hWin = SApiUser32.CreateWindowExA(0, windowClassName, Title, winStyle, CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
-  if(hWin == NULL) {
-    GT_LOG(LOG_FATAL, "API:WIN32 Not Create Game Window");
-    exit(1);  // Exit Program
-  }
-
-  return hWin;
-}
-
-void ApiWin32DestroyWindow(HWND Window) {
-  SApiUser32.DestroyWindow(Window);
-}
-
-HDC ApiWin32GetDC(HWND Window) {
-  return SApiUser32.GetDC(Window);
-}
-
-// Setting the Win32 API interface.
-bool ApiWin32Init(IWindowApi* WindowApi) {
-  SLibUser32 = PModuleLoad("user32.dll");
-  if(SLibUser32 == NULL) {
+bool ApiWin32Init(IWindowApi* Api) {
+  SLibUser = PModuleLoad("user32.dll");
+  if(SLibUser == NULL) {
     return false;
   }
-  PModuleLoadApi(SLibUser32, &SApiUser32, SLibUser32Names, false);
+  PModuleLoadApi(SLibUser, &SApiUser, SLibUserNames, false);
+  Api->OnCreate = &ApiWin32CreateWindow;
+  Api->OnUpdate = &ApiWin32UpdateWindow;
+  Api->OnDestroy = &ApiWin32DestroyWindow;
+  Api->OnIsFocused = &ApiWin32WindowIsFocused;
+  Api->OnSetSize = &ApiWin32SetWindowSize;
+  Api->OnSetMode = &ApiWin32SetWindowMode;
+  Api->OnSetFullscreen = &ApiWin32SetFullscreen;
+  Api->OnSetCursorPos = &ApiWin32SetCursorPos;
+  Api->OnShowCursor = &ApiWin32ShowCursor;
 
-  WindowApi->OnWindowCreate = &ApiWin32WindowCreate;
-  WindowApi->OnWindowUpdate = &ApiWin32WindowUpdate;
-  WindowApi->OnWindowDestroy = &ApiWin32WindowDestroy;
-  WindowApi->OnWindowFullscreen = &ApiWin32SetFullscreen;
-  WindowApi->OnWindowShowCursor = &ApiWin32ShowCursor;
-  WindowApi->OnWindowSetCursorPos = &ApiWin32SetCursorPos;
-  GT_LOG(LOG_INFO, "API:WIN32 Initialized");
+  GT_LOG(LOG_INFO, "API-WIN32: Initialized");
   return true;
 }
 

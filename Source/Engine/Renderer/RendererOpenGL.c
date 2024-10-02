@@ -1,14 +1,15 @@
 #ifdef USE_OPENGL
 #include <string.h>
-#include "Renderer.h"
+#include "GT/Renderer.h"
+#include "GT/Platform.h"
 #include "GL/ApiGL.h"
 #include "GT/Engine.h"
 
 //TODO:Create default shader by code.
-static RShader SDefaultShader = 0;
+static FShader SDefaultShader = 0;
 
-static RPrimitive InternalCreateQuad();
-static RPrimitive InternalCreateCircle();
+static FPrimitive InternalCreateQuad();
+static FPrimitive InternalCreateCircle();
 
 static cstring SDefaultVertSource =
     "#version 330 core\n"
@@ -29,28 +30,33 @@ static cstring SDefaultFragSource =
     " fragColor = uColor;\n"
     "}";
 
-void RRendererInitialize() {
-  SDefaultShader = RShaderCreate(SDefaultVertSource, SDefaultFragSource);
-  GT_LOG(LOG_INFO, "API:OPENGL Created Default Shader Program");
+void FRendererInitialize(ERendererApi Renderer) {
+  switch (Renderer) {
+    case OPENGL_VERSION_3_3: GEngine.graphicApi.OnInitOpenGL(3, 3); break;
+    case OPENGL_VERSION_4_5: GEngine.graphicApi.OnInitOpenGL(4, 5); break;
+    case OPENGL_VERSION_4_6: GEngine.graphicApi.OnInitOpenGL(4, 6); break;
+  }
+  SDefaultShader = FShaderCreate(SDefaultVertSource, SDefaultFragSource);
+  GT_LOG(LOG_INFO, "API-GL: Created Default Shader Program");
 }
 
-void RRendererTerminate() {
+void FRendererTerminate() {
 }
 
-void RSetClearColor(FColor Color) {
+void FSetClearColor(FColor Color) {
   glClearColor(FCOLOR_GL(Color));
 }
 
-void RClearBuffers() {
+void FClearBuffers() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void RSetViewport(FRect Viewport) {
+void FSetViewport(FRect Viewport) {
   glViewport(Viewport.x, Viewport.y, Viewport.width, Viewport.height);
 }
 
 // Shader Program
-RShader RShaderCreate(cstring VertexSource, cstring FragmentSource) {
+FShader FShaderCreate(cstring VertexSource, cstring FragmentSource) {
   char logBuffer[BUFFER_LOG_SIZE] = {""};
   uint32 vertexShader, fragmentShader, shaderProgram;
   int32 status = 0;
@@ -99,7 +105,7 @@ RShader RShaderCreate(cstring VertexSource, cstring FragmentSource) {
   return shaderProgram;
 }
 
-RShader RShaderLoad(cstring VertexPath, cstring FragmentPath) {
+FShader FShaderLoad(cstring VertexPath, cstring FragmentPath) {
   cstring vs = strstr(VertexPath, CONTENT_DIR);
   cstring fs = strstr(FragmentPath, CONTENT_DIR);
   vs = (vs == NULL) ? VertexPath : vs;
@@ -119,26 +125,26 @@ RShader RShaderLoad(cstring VertexPath, cstring FragmentPath) {
     return SDefaultShader;
   }
 
-  RShader shaderProgram = RShaderCreate(vsBuffer, fsBuffer);
+  FShader shaderProgram = FShaderCreate(vsBuffer, fsBuffer);
 
   PMemFree(vsBuffer);
   PMemFree(fsBuffer);
 
   if(shaderProgram == SDefaultShader) {
-    GT_LOG(LOG_INFO, "API:OPENGL Use Default Shader Program");
+    GT_LOG(LOG_INFO, "API:GL Use Default Shader Program");
     return SDefaultShader;
   }
 
-  GT_LOG(LOG_INFO, "API:OPENGL Loaded Shader Program => %s | %s", vs, fs);
+  GT_LOG(LOG_INFO, "API:GL Loaded Shader Program => %s | %s", vs, fs);
   return shaderProgram;
 }
 
-void RShaderFree(RShader Shader) {
+void FShaderFree(FShader Shader) {
   glDeleteProgram(Shader);
 }
 
-RPrimitive RGetPrimitive(EPrimitiveShape Shape) {
-  RPrimitive retVal = {0};
+FPrimitive FGetPrimitive(EPrimitiveShape Shape) {
+  FPrimitive retVal = {0};
   switch(Shape) {
     case PS_QUAD: retVal = InternalCreateQuad(); break;
     case PS_CIRCLE: retVal = InternalCreateCircle(); break;
@@ -147,7 +153,7 @@ RPrimitive RGetPrimitive(EPrimitiveShape Shape) {
   return retVal;
 }
 
-void RDrawPrimitive(RPrimitive Primitive, FColor Color) {
+void FDrawPrimitive(FPrimitive Primitive, FColor Color) {
   glUseProgram(SDefaultShader);
   glUniform4fv(Primitive.uColorID, 1, (const float*)&Color);
   glBindVertexArray(Primitive.objectID);
@@ -157,9 +163,9 @@ void RDrawPrimitive(RPrimitive Primitive, FColor Color) {
 }
 
 // Intenal Functions
-static RPrimitive InternalCreateQuad() {
+static FPrimitive InternalCreateQuad() {
   static bool bCreated = false;
-  static RPrimitive primitive = {0};
+  static FPrimitive primitive = {0};
 
   if(bCreated) {
     return primitive;
@@ -203,9 +209,9 @@ static RPrimitive InternalCreateQuad() {
   return primitive;
 }
 
-static RPrimitive InternalCreateCircle() {
+static FPrimitive InternalCreateCircle() {
   static bool bCreated = false;
-  static RPrimitive primitive = {0};
+  static FPrimitive primitive = {0};
 
   if(bCreated) {
     return primitive;
@@ -222,6 +228,8 @@ static RPrimitive InternalCreateCircle() {
 
   vertices[0] = 0.f;
   vertices[1] = 0.f;
+  texCoord[0] = 0.5f;
+  texCoord[1] = 0.5f;
 
   for(int32 i = 0; i <= SEGMENTS; i ++){
     float theta = 2.0f * M_PI * (float)i / (float)SEGMENTS;
@@ -229,7 +237,7 @@ static RPrimitive InternalCreateCircle() {
     vertices[2 * (i + 1) + 1] = RADIUS * sinf(theta); // Y
 
     texCoord[2 * (i + 1)] = 0.5f + 0.5f * cosf(theta);
-    texCoord[2 * (i + 1)] = 0.5f + 0.5f * sinf(theta);
+    texCoord[2 * (i + 1) + 1] = 0.5f + 0.5f * sinf(theta);
 
     if(i < SEGMENTS){
       indices[i * 3] = 0;

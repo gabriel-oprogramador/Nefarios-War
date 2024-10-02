@@ -1,43 +1,22 @@
 #include "GT/Engine.h"
-#include "GameModule.h"
-#include "Renderer.h"
-
-// Engine primary systems.
-extern void FInputUpdate(float DeltaTime);
-extern void FTimerUpdate(float DeltaTime);
-
-// Gameplay Control.
-static bool SbInitGamePlay = true;
-static bool SbGameIsRunning = false;
-static float deltaTime = 0.f;
+#include "GT/Renderer.h"
+#include "GameFramework.h"
 
 // Engine Entrypoint
 int GTmain(int argc, const char** argv) {
-  PEngineProcess(0, argv);
-  PEngineInitialize(800, 600, STR(GAME_NAME));
-  RRendererInitialize();
+  const float ASPECT = 1.7777;
+  const int32 WIDTH = 800;
+  const int32 HEIGHT = WIDTH / ASPECT;
 
-  PEngineSetTargetFPS(60);
-  GameInit();
+  FEngineInitialize(0, argv);
+  FSetTargetFPS(60);
+  FInitWindow(WIDTH, HEIGHT, STR(GAME_NAME));
+  FSetClearColor(COLOR_WHITE);
 
-  while(!PEngineShouldClose()) {
-    deltaTime = (float)GEngine.timerApi.deltaTime;
-    PEngineBeginFrame();
-    FInputUpdate(deltaTime);
-    if(SbInitGamePlay && !SbGameIsRunning) {
-      SbGameIsRunning = true;
-      GameStart();
-    }
-    if(SbInitGamePlay) {
-      FTimerUpdate(deltaTime);
-      GameUpdate(deltaTime);
-    }
-    PEngineEndFrame();
-  }
-  GameStop();
-  RRendererTerminate();
-  PEngineTerminate();
+  FEngineMainLoop();
 
+  FCloseWindow();
+  FEngineTerminate();
   return 0;
 }
 

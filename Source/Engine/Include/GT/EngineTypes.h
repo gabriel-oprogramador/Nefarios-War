@@ -9,12 +9,40 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 typedef const char* cstring;
-typedef uint32 RShader;
+typedef uint32 FShader;
+
+typedef enum {
+  OPENGL_VERSION_3_3,
+  OPENGL_VERSION_4_5,
+  OPENGL_VERSION_4_6,
+} ERendererApi;
 
 typedef enum {
   PS_QUAD,
   PS_CIRCLE,
 } EPrimitiveShape;
+
+typedef enum {
+  WINDOW_MODE_FIXED,
+  WINDOW_MODE_RESIZABLE,
+  WINDOW_MODE_FULLSCREEN,
+} EWindowMode;
+
+typedef struct {
+  int32 width;
+  int32 height;
+  int32 monitorWidth;
+  int32 monitorHeight;
+  cstring title;
+  void* pWindow;
+  void* pDevice;
+  void* pContext;
+  bool bFullscreen;
+  bool bShouldClose;
+  bool bShowCursor;
+  bool bCursorCaptured;
+  EWindowMode windowMode;
+} FWindow;
 
 typedef enum {
   IM_GAME_ONLY,
@@ -32,12 +60,12 @@ typedef enum {
   LOG_ALERT = (1 << 5),
 } ELogLevel;
 
-typedef struct{
+typedef struct {
   EPrimitiveShape shape;
   uint32 uColorID;
   uint32 objectID;
   uint32 indices;
-} RPrimitive;
+} FPrimitive;
 
 typedef struct {
   float r;

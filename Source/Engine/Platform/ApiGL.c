@@ -1,5 +1,5 @@
 #include "GL/ApiGL.h"
-#include "GT/Engine.h"
+#include "GT/Platform.h"
 
 #ifdef PLATFORM_WINDOWS
 typedef PROC (*FWglGetProcAddress)(LPCSTR);

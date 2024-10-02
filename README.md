@@ -4,10 +4,10 @@
 ![Windows](https://img.shields.io/badge/WGL-Suported-green)
 ![Windows](https://img.shields.io/badge/OpenGL-Suported-green)  
 
-![Linux](https://img.shields.io/badge/Linux-OK-green) =>
-![Linux](https://img.shields.io/badge/X11-Suported-green) 
-![Linux](https://img.shields.io/badge/EGL-Suported-green) 
-![Linux](https://img.shields.io/badge/OpenGL-Suported-green)  
+![Linux](https://img.shields.io/badge/Linux-BROKEN-red) =>
+![Linux](https://img.shields.io/badge/X11-NotSuported-red) 
+![Linux](https://img.shields.io/badge/EGL-NotSuported-red) 
+![Linux](https://img.shields.io/badge/OpenGL-NotSuported-red)  
 
 # Note
 Sorry for any errors, this was all translated using Google Translate.  
