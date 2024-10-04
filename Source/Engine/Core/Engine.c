@@ -12,7 +12,7 @@ static double SFrameStartTime = 0;
 bool FEngineInitialize(uint64 Flags, const char** Args) {
   PPlatformInitialize();
   FRendererInitialize(OPENGL_VERSION_3_3);
-  GEngine.state |= (ES_ENGINE_RUNNING | ES_GAME_MODE);
+  GEngine.state = (ES_ENGINE_RUNNING | ES_GAME_MODE);
   GameInit();
   GEngine.timerApi.engineStartTime = PGetTime();
   GT_LOG(LOG_INFO, "API-GT: Initialized");
@@ -27,7 +27,6 @@ void FEngineMainLoop() {
   while(FEngineGetState() & ES_ENGINE_RUNNING) {
     InternalBeginFrame();
     GEngine.windowApi.OnUpdate();
-
     if(GEngine.state & ES_GAME_RUNNING) {
       GameUpdate(GEngine.timerApi.deltaTime);
     }

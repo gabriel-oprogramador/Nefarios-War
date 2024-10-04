@@ -1,11 +1,10 @@
-#ifdef USE_OPENGL
+#ifdef RENDERER_OPENGL
 #include <string.h>
 #include "GT/Renderer.h"
 #include "GT/Platform.h"
 #include "GL/ApiGL.h"
 #include "GT/Engine.h"
 
-//TODO:Create default shader by code.
 static FShader SDefaultShader = 0;
 
 static FPrimitive InternalCreateQuad();
@@ -26,15 +25,21 @@ static cstring SDefaultFragSource =
     "uniform vec4 uColor = vec4(1.0, 0.0, 1.0, 1.0);\n"
     "in vec2 vTexCoord;\n"
     "out vec4 fragColor;\n"
+    "vec4 finalColor;\n"
     "void main() {\n"
     " fragColor = uColor;\n"
     "}";
 
 void FRendererInitialize(ERendererApi Renderer) {
-  switch (Renderer) {
-    case OPENGL_VERSION_3_3: GEngine.graphicApi.OnInitOpenGL(3, 3); break;
-    case OPENGL_VERSION_4_5: GEngine.graphicApi.OnInitOpenGL(4, 5); break;
-    case OPENGL_VERSION_4_6: GEngine.graphicApi.OnInitOpenGL(4, 6); break;
+  bool bGraphic = false;
+  switch(Renderer) {
+    case OPENGL_VERSION_3_3: bGraphic = GEngine.graphicApi.OnInitOpenGL(3, 3); break;
+    case OPENGL_VERSION_4_5: bGraphic = GEngine.graphicApi.OnInitOpenGL(4, 5); break;
+    case OPENGL_VERSION_4_6: bGraphic = GEngine.graphicApi.OnInitOpenGL(4, 6); break;
+  }
+  if(bGraphic == false){
+    GT_LOG(LOG_FATAL, "API-GL: Uninitialized!");
+    return;
   }
   SDefaultShader = FShaderCreate(SDefaultVertSource, SDefaultFragSource);
   GT_LOG(LOG_INFO, "API-GL: Created Default Shader Program");
@@ -44,7 +49,7 @@ void FRendererTerminate() {
 }
 
 void FSetClearColor(FColor Color) {
-  glClearColor(FCOLOR_GL(Color));
+    glClearColor(FCOLOR_GL(Color));
 }
 
 void FClearBuffers() {

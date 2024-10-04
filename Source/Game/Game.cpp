@@ -16,12 +16,13 @@ void GameUpdate(float DeltaTime) {
   static FColor color = COLOR_RED;
   FDrawPrimitive(SMesh, color);
 
-  //FVector2 pos = FGetMousePos();
+  //FVector2 pos = FGetMonitorSize();
   //GT_LOGTEMP(LOG_ALERT, "Mouse Pos => X:%f Y:%f", pos.x, pos.y);
+
   if(FIsKeyPressed(KEY_W)) {
     color = COLOR_YELLOW;
-    //FSetWindowSize((FVector2){1280, 768});
-    FSetWindowMode(WINDOW_MODE_RESIZABLE);
+    FSetWindowSize((FVector2){1280, 768});
+    //FSetWindowMode(WINDOW_MODE_RESIZABLE);
   }
 
   if(FIsKeyPressed(KEY_SPACE)) {
@@ -32,8 +33,8 @@ void GameUpdate(float DeltaTime) {
 
   if(FIsKeyPressed(KEY_S)) {
     color = COLOR_RED;
-    //FSetWindowSize((FVector2){800, 600});
-    FSetWindowMode(WINDOW_MODE_FIXED);
+    FSetWindowSize((FVector2){800, 600});
+    //FSetWindowMode(WINDOW_MODE_FIXED);
   }
 
   if(FIsKeyPressed(KEY_TAB)) {

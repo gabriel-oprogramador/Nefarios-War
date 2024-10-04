@@ -4,10 +4,10 @@
 ![Windows](https://img.shields.io/badge/WGL-Suported-green)
 ![Windows](https://img.shields.io/badge/OpenGL-Suported-green)  
 
-![Linux](https://img.shields.io/badge/Linux-BROKEN-red) =>
-![Linux](https://img.shields.io/badge/X11-NotSuported-red) 
-![Linux](https://img.shields.io/badge/EGL-NotSuported-red) 
-![Linux](https://img.shields.io/badge/OpenGL-NotSuported-red)  
+![Linux](https://img.shields.io/badge/Linux-OK-green) =>
+![Linux](https://img.shields.io/badge/X11-Suported-green) 
+![Linux](https://img.shields.io/badge/EGL-Suported-green) 
+![Linux](https://img.shields.io/badge/OpenGL-Suported-green)  
 
 # Note
 Sorry for any errors, this was all translated using Google Translate.  
@@ -39,7 +39,7 @@ To use Clang on Windows Add the below to the Vs Code settings file.
     }  
 * Windows
     + Port of Linux Tools 'make, gcc, mkdir, rm, ...'. Used v1.22.0 -> [W64devkit](https://github.com/skeeto/w64devkit/releases)
-    + Clang with format for GDB. Used v14.0.0 -> [llvm-mingw](https://github.com/mstorsjo/llvm-mingw/releases)  
+    + Clang with format for GDB. Used v17.0.6 -> [llvm-mingw](https://github.com/mstorsjo/llvm-mingw/releases)  
     I switched to clang 14 because it is the version used on Linux and the versions above for Windows are executable and are accused of viruses.
 * Linux
     + Gnu-Make

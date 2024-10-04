@@ -3,10 +3,10 @@
 #include "GT/Renderer.h"
 
 void FInitWindow(int32 Width, int32 Height, cstring Title) {
-  if(GEngine.mainWindow.bShouldClose == false) {
+  if(GEngine.mainWindow.pWindow != NULL) {
     return;
   }
-  uint32 mode = WINDOW_MODE_RESIZABLE;
+  uint32 mode = WINDOW_MODE_FIXED;
   GEngine.windowApi.OnCreate(Width, Height, Title, mode);
   GEngine.graphicApi.OnCreateContext();
   GEngine.graphicApi.OnMakeCurrent();
@@ -17,6 +17,9 @@ void FInitWindow(int32 Width, int32 Height, cstring Title) {
 }
 
 void FCloseWindow() {
+  if(GEngine.mainWindow.pWindow == NULL){
+    return;
+  }
   GEngine.windowApi.OnDestroy();
   if(GEngine.mainWindow.pContext){
     GEngine.graphicApi.OnDestroyContext();

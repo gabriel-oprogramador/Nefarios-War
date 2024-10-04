@@ -10,6 +10,7 @@ int GTmain(int argc, const char** argv) {
 
   FEngineInitialize(0, argv);
   FSetTargetFPS(60);
+
   FInitWindow(WIDTH, HEIGHT, STR(GAME_NAME));
   FSetClearColor(COLOR_WHITE);
 

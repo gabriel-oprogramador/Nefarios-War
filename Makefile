@@ -9,7 +9,7 @@ CONFIG_DIR = $(abspath Config/)
 CONTENT_DIR = $(abspath Content/)
 
 INCLUDES = -ISource/Engine -ISource/Engine/Include -ISource/Engine/Game -ISource/Game/Include
-DEFINES = -DGAME_NAME=$(GAME) -DUSE_OPENGL
+DEFINES = -DGAME_NAME=$(GAME) -DRENDERER_OPENGL
 FLAGS =
 KIND =
 CFLAGS =
